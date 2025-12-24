@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Admin Dashboard</h1>
+            <p class="text-muted mb-0">System overview and statistics</p>
+        </div>
+        <div>
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+                <i class="bi bi-person-plus me-2"></i>Add User
+            </a>
+        </div>
+    </div>
+
+    <!-- Pending Approvals Alert -->
+    {% if pending_approvals > 0 %}
+    <div class="alert alert-warning d-flex align-items-center mb-4" role="alert">
+        <i class="bi bi-exclamation-circle-fill me-3 fs-4"></i>
+        <div class="flex-grow-1">
+            <strong>{{ pending_approvals }} user{{ 's' if pending_approvals > 1 else '' }} pending approval</strong>
+            <p class="mb-0 small">New registrations are waiting for your review.</p>
+        </div>
+        <a href="{{ url_for('admin.pending_users') }}" class="btn btn-warning">
+            <i class="bi bi-person-check me-1"></i> Review Now
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Stats Overview -->
+    <div class="row g-4 mb-4">
+        <!-- Users Card -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card bg-gradient" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label text-white-50 mb-1">Total Users</p>
+                        <p class="stat-value text-white mb-0">{{ total_users }}</p>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-people"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-white-50">
+                        <span class="text-white">{{ admin_count }}</span> Admins ·
+                        <span class="text-white">{{ manager_count }}</span> Managers ·
+                        <span class="text-white">{{ employee_count }}</span> Employees
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Card -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label text-white-50 mb-1">Total Tasks</p>
+                        <p class="stat-value text-white mb-0">{{ total_tasks }}</p>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-check2-square"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="progress" style="height: 6px;">
+                        {% set completion = ((done_count / total_tasks) * 100) if total_tasks > 0 else 0 %}
+                        <div class="progress-bar bg-white" style="width: {{ completion }}%"></div>
+                    </div>
+                    <small class="text-white-50 mt-1">{{ "%.0f"|format(completion) }}% completed</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Card -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label text-white-50 mb-1">Active Projects</p>
+                        <p class="stat-value text-white mb-0">{{ active_projects }}</p>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-folder"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-white-50">
+                        of <span class="text-white">{{ total_projects }}</span> total projects
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Priority Card -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label text-white-50 mb-1">High Priority</p>
+                        <p class="stat-value text-white mb-0">{{ high_priority }}</p>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <small class="text-white-50">
+                        <span class="text-white">{{ medium_priority }}</span> Medium ·
+                        <span class="text-white">{{ low_priority }}</span> Low
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Status Breakdown -->
+    <div class="row g-4 mb-4">
+        <div class="col-xl-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-task me-2"></i>Recent Tasks</h5>
+                    <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_tasks %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Task</th>
+                                    <th>Project</th>
+                                    <th>Status</th>
+                                    <th>Priority</th>
+                                    <th>Assignee</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in recent_tasks %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
+                                            class="text-decoration-none">
+                                            {{ task.title }}
+                                        </a>
+                                    </td>
+                                    <td>{{ task.project.name }}</td>
+                                    <td>
+                                        <span class="badge badge-status-{{ task.status.lower().replace(' ', '-') }}">
+                                            {{ task.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-priority-{{ task.priority.lower() }}">
+                                            {{ task.priority }}
+                                        </span>
+                                    </td>
+                                    <td>{{ task.assignee.username if task.assignee else 'Unassigned' }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="empty-state py-5">
+                        <i class="bi bi-inbox empty-state-icon"></i>
+                        <p class="text-muted">No tasks created yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Recent Users</h5>
+                    <a href="{{ url_for('admin.users') }}" class="btn btn-sm btn-outline-primary">Manage</a>
+                </div>
+                <div class="card-body">
+                    {% if recent_users %}
+                    <div class="list-group list-group-flush">
+                        {% for user in recent_users %}
+                        <a href="{{ url_for('admin.view_user', user_id=user.id) }}"
+                            class="list-group-item list-group-item-action bg-transparent border-0 px-0">
+                            <div class="d-flex align-items-center">
+                                <div
+                                    class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-3">
+                                    <span class="text-white fw-bold">{{ user.username[0].upper() }}</span>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <p class="mb-0 fw-medium">{{ user.username }}</p>
+                                    <small class="text-muted">{{ user.email }}</small>
+                                </div>
+                                <span
+                                    class="badge bg-{{ 'danger' if user.role == 'admin' else 'warning' if user.role == 'manager' else 'info' }}">
+                                    {{ user.role }}
+                                </span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state py-4">
+                        <i class="bi bi-people empty-state-icon"></i>
+                        <p class="text-muted">No users yet</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Status Distribution -->
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="card text-center py-4">
+                <div class="card-body">
+                    <div class="display-4 fw-bold text-secondary">{{ todo_count }}</div>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-circle me-1"></i>To Do
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center py-4">
+                <div class="card-body">
+                    <div class="display-4 fw-bold text-info">{{ in_progress_count }}</div>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-arrow-repeat me-1"></i>In Progress
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center py-4">
+                <div class="card-body">
+                    <div class="display-4 fw-bold text-success">{{ done_count }}</div>
+                    <p class="text-muted mb-0">
+                        <i class="bi bi-check-circle me-1"></i>Done
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

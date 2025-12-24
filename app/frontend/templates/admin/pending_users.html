@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">Pending Approvals</h1>
+            <p class="text-muted mb-0">Review and approve new user registrations</p>
+        </div>
+        <span class="badge bg-warning fs-6">{{ pending_count }} Pending</span>
+    </div>
+
+    <!-- Pending Users List -->
+    <div class="card">
+        <div class="card-body p-0">
+            {% if users %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Registered</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm bg-secondary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                        <span class="text-white small">{{ user.username[0].upper() }}</span>
+                                    </div>
+                                    <div>
+                                        <strong>{{ user.username }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ user.role }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {{ user.created_at.strftime('%b %d, %Y at %H:%M') }}
+                            </td>
+                            <td class="text-center">
+                                <div class="btn-group" role="group">
+                                    <!-- Approve Button -->
+                                    <form action="{{ url_for('admin.approve_user', user_id=user.id) }}" method="POST" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-success" title="Approve">
+                                            <i class="bi bi-check-lg me-1"></i> Approve
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Reject Button -->
+                                    <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#rejectModal{{ user.id }}" title="Reject">
+                                        <i class="bi bi-x-lg me-1"></i> Reject
+                                    </button>
+                                </div>
+                                
+                                <!-- Reject Modal -->
+                                <div class="modal fade" id="rejectModal{{ user.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Reject User: {{ user.username }}</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form action="{{ url_for('admin.reject_user', user_id=user.id) }}" method="POST">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <div class="modal-body">
+                                                    <p>Are you sure you want to reject <strong>{{ user.username }}</strong>'s registration?</p>
+                                                    <div class="mb-3">
+                                                        <label for="reason" class="form-label">Reason (optional)</label>
+                                                        <textarea name="reason" class="form-control" rows="3" placeholder="Provide a reason for rejection..."></textarea>
+                                                    </div>
+                                                    <p class="text-muted small">
+                                                        <i class="bi bi-info-circle me-1"></i>
+                                                        The user will be notified via email and their account will be deleted.
+                                                    </p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-danger">
+                                                        <i class="bi bi-x-lg me-1"></i> Reject & Delete
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if pagination.pages > 1 %}
+            <div class="card-footer d-flex justify-content-center">
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if pagination.has_prev %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.pending_users', page=pagination.prev_num) }}">Previous</a>
+                        </li>
+                        {% endif %}
+                        
+                        {% for page_num in pagination.iter_pages() %}
+                            {% if page_num %}
+                                <li class="page-item {{ 'active' if page_num == pagination.page else '' }}">
+                                    <a class="page-link" href="{{ url_for('admin.pending_users', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">…</span></li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if pagination.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="{{ url_for('admin.pending_users', page=pagination.next_num) }}">Next</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">No Pending Approvals</h5>
+                <p class="text-muted">All user registrations have been reviewed.</p>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-primary">
+                    <i class="bi bi-people me-1"></i> View All Users
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

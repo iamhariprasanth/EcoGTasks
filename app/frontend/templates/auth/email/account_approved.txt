@@ -1,0 +1,11 @@
+Dear {{ user.username }},
+
+Great news! Your EcoGTasks account has been approved by an administrator.
+
+You can now log in and start using EcoGTasks:
+{{ url_for('auth.login', _external=True) }}
+
+Welcome to the team!
+
+Best regards,
+The EcoGTasks Team

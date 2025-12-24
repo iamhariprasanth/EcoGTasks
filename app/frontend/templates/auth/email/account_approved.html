@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Approved</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #166534;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        p {
+            margin-bottom: 15px;
+        }
+        .button {
+            display: inline-block;
+            background-color: #16a34a;
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 14px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 20px 0;
+        }
+        .button:hover {
+            background-color: #15803d;
+        }
+        .button-container {
+            text-align: center;
+        }
+        .success-badge {
+            background-color: #dcfce7;
+            border: 2px solid #16a34a;
+            border-radius: 50%;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <h2 style="color: #4f46e5; margin: 0;">🗂️ EcoGTasks</h2>
+        </div>
+        
+        <div class="success-badge">✓</div>
+        
+        <h1>Account Approved! 🎉</h1>
+        
+        <p>Dear <strong>{{ user.username }}</strong>,</p>
+        
+        <p>Great news! Your EcoGTasks account has been <strong>approved</strong> by an administrator.</p>
+        
+        <p>You can now log in and start managing your tasks, collaborating with your team, and tracking your projects.</p>
+        
+        <div class="button-container">
+            <a href="{{ url_for('auth.login', _external=True) }}" class="button">
+                Log In Now
+            </a>
+        </div>
+        
+        <p style="text-align: center; color: #666;">Welcome to the team!</p>
+        
+        <div class="footer">
+            <p>Best regards,<br>The EcoGTasks Team</p>
+            <p style="font-size: 12px; color: #999;">
+                This is an automated message. Please do not reply to this email.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

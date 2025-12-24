@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1">My Dashboard</h1>
+            <p class="text-muted mb-0">Your tasks and activity overview</p>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="row g-4 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label text-white-50 mb-1">Assigned Tasks</p>
+                        <p class="stat-value text-white mb-0">{{ total_assigned }}</p>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-list-task"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label text-white-50 mb-1">To Do</p>
+                        <p class="stat-value text-white mb-0">{{ todo_count }}</p>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label text-white-50 mb-1">In Progress</p>
+                        <p class="stat-value text-white mb-0">{{ in_progress_count }}</p>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <p class="stat-label text-white-50 mb-1">Completed</p>
+                        <p class="stat-value text-white mb-0">{{ done_count }}</p>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25 text-white">
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- High Priority Tasks -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle text-danger me-2"></i>High Priority Tasks
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if high_priority_tasks %}
+                    <div class="list-group list-group-flush">
+                        {% for task in high_priority_tasks %}
+                        <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
+                            class="list-group-item list-group-item-action bg-transparent border-0 px-0 py-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ task.title }}</h6>
+                                    <small class="text-muted">
+                                        {{ task.project.name }}
+                                        {% if task.due_date %}
+                                        · Due: {{ task.due_date.strftime('%b %d') }}
+                                        {% endif %}
+                                    </small>
+                                </div>
+                                <span class="badge badge-status-{{ task.status.lower().replace(' ', '-') }}">
+                                    {{ task.status }}
+                                </span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state py-4">
+                        <i class="bi bi-check-circle text-success" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">No high priority tasks!</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Upcoming Deadlines -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-calendar-event text-warning me-2"></i>Upcoming Deadlines
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if upcoming_tasks %}
+                    <div class="list-group list-group-flush">
+                        {% for task in upcoming_tasks %}
+                        <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
+                            class="list-group-item list-group-item-action bg-transparent border-0 px-0 py-3">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="mb-1">{{ task.title }}</h6>
+                                    <small class="text-muted">{{ task.project.name }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <span class="badge {{ 'bg-danger' if task.is_overdue() else 'bg-warning' }} mb-1">
+                                        {{ task.due_date.strftime('%b %d, %Y') }}
+                                    </span>
+                                    <br>
+                                    <span class="badge badge-priority-{{ task.priority.lower() }}">
+                                        {{ task.priority }}
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state py-4">
+                        <i class="bi bi-calendar-check text-success" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">No upcoming deadlines</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Tasks -->
+    <div class="card mt-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-clock-history me-2"></i>My Recent Tasks</h5>
+            <a href="{{ url_for('tasks.list_tasks') }}" class="btn btn-sm btn-outline-primary">View All Tasks</a>
+        </div>
+        <div class="card-body p-0">
+            {% if recent_tasks %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Task</th>
+                            <th>Project</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Due Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in recent_tasks %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
+                                    class="text-decoration-none">
+                                    {{ task.title }}
+                                </a>
+                            </td>
+                            <td>{{ task.project.name }}</td>
+                            <td>
+                                <span class="badge badge-status-{{ task.status.lower().replace(' ', '-') }}">
+                                    {{ task.status }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-priority-{{ task.priority.lower() }}">
+                                    {{ task.priority }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if task.due_date %}
+                                <span class="{{ 'text-danger' if task.is_overdue() else '' }}">
+                                    {{ task.due_date.strftime('%b %d, %Y') }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state py-5">
+                <i class="bi bi-inbox empty-state-icon"></i>
+                <p class="text-muted">No tasks assigned to you yet</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

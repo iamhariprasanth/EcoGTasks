@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('admin.users') }}">Users</a></li>
+            <li class="breadcrumb-item active">{{ user.username }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- User Profile -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div
+                        class="avatar-md bg-{{ 'danger' if user.role == 'admin' else 'warning' if user.role == 'manager' else 'primary' }} rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3">
+                        <span class="text-white display-6">{{ user.username[0].upper() }}</span>
+                    </div>
+                    <h4>{{ user.username }}</h4>
+                    <p class="text-muted">{{ user.email }}</p>
+                    <span
+                        class="badge bg-{{ 'danger' if user.role == 'admin' else 'warning' if user.role == 'manager' else 'info' }} fs-6">
+                        {{ user.role|capitalize }}
+                    </span>
+
+                    <hr>
+
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <h5 class="mb-0">{{ assigned_tasks }}</h5>
+                            <small class="text-muted">Assigned</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="mb-0">{{ created_tasks }}</h5>
+                            <small class="text-muted">Created</small>
+                        </div>
+                        <div class="col-4">
+                            <h5 class="mb-0">{{ projects_count }}</h5>
+                            <small class="text-muted">Projects</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Actions</h6>
+                </div>
+                <div class="card-body">
+                    <!-- Toggle Status -->
+                    {% if user.id != current_user.id %}
+                    <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}"
+                        class="mb-2">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                            class="btn btn-{{ 'warning' if user.is_active else 'success' }} btn-sm w-100">
+                            <i class="bi bi-{{ 'pause' if user.is_active else 'play' }} me-1"></i>
+                            {{ 'Deactivate' if user.is_active else 'Activate' }} Account
+                        </button>
+                    </form>
+
+                    <!-- Reset Password -->
+                    <form method="POST" action="{{ url_for('admin.reset_password', user_id=user.id) }}" class="mb-2"
+                        onsubmit="return confirm('Reset password for {{ user.username }}?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-warning btn-sm w-100">
+                            <i class="bi bi-key me-1"></i>Reset Password
+                        </button>
+                    </form>
+
+                    <!-- Delete User -->
+                    <form method="POST" action="{{ url_for('admin.delete_user', user_id=user.id) }}"
+                        onsubmit="return confirm('Are you sure you want to delete {{ user.username }}? This cannot be undone.');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-outline-danger btn-sm w-100">
+                            <i class="bi bi-trash me-1"></i>Delete User
+                        </button>
+                    </form>
+                    {% else %}
+                    <p class="text-muted text-center mb-0">
+                        <i class="bi bi-info-circle me-1"></i>
+                        You cannot modify your own account
+                    </p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- User Details -->
+        <div class="col-lg-8">
+            <!-- Details Card -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">User Details</h5>
+                    <span class="badge bg-{{ 'success' if user.is_active else 'secondary' }}">
+                        {{ 'Active' if user.is_active else 'Inactive' }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted" style="width: 30%;">Username</td>
+                            <td>{{ user.username }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Email</td>
+                            <td>{{ user.email }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Role</td>
+                            <td>
+                                {% if user.id != current_user.id %}
+                                <form method="POST" action="{{ url_for('admin.change_user_role', user_id=user.id) }}"
+                                    class="d-flex gap-2">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <select name="role" class="form-select form-select-sm" style="width: auto;">
+                                        <option value="employee" {{ 'selected' if user.role=='employee' else '' }}>
+                                            Employee</option>
+                                        <option value="manager" {{ 'selected' if user.role=='manager' else '' }}>Manager
+                                        </option>
+                                        <option value="admin" {{ 'selected' if user.role=='admin' else '' }}>Admin
+                                        </option>
+                                    </select>
+                                    <button type="submit" class="btn btn-sm btn-outline-primary">Update</button>
+                                </form>
+                                {% else %}
+                                {{ user.role|capitalize }}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Created At</td>
+                            <td>{{ user.created_at.strftime('%B %d, %Y at %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Last Login</td>
+                            <td>
+                                {% if user.last_login %}
+                                {{ user.last_login.strftime('%B %d, %Y at %H:%M') }}
+                                {% else %}
+                                <span class="text-muted">Never logged in</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Recent Tasks -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Assigned Tasks</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if recent_tasks %}
+                    <div class="list-group list-group-flush">
+                        {% for task in recent_tasks %}
+                        <a href="{{ url_for('tasks.view_task', task_id=task.id) }}"
+                            class="list-group-item list-group-item-action bg-transparent">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-1">{{ task.title }}</h6>
+                                    <small class="text-muted">{{ task.project.name }}</small>
+                                </div>
+                                <span class="badge badge-status-{{ task.status.lower().replace(' ', '-') }}">
+                                    {{ task.status }}
+                                </span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state py-4">
+                        <p class="text-muted mb-0">No tasks assigned to this user</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

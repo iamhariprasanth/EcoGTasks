@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-{{ 'pencil' if is_edit else 'plus-lg' }} me-2"></i>
+                        {{ 'Edit Task' if is_edit else 'Create New Task' }}
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST"
+                        action="{{ url_for('tasks.edit_task', task_id=task.id) if is_edit else url_for('tasks.create_task') }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label">{{ form.title.label.text }} *</label>
+                            {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""),
+                            placeholder="Enter task title") }}
+                            {% for error in form.title.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">{{ form.description.label.text }}</label>
+                            {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else
+                            ""), rows="4", placeholder="Describe the task in detail...") }}
+                            {% for error in form.description.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="project_id" class="form-label">{{ form.project_id.label.text }} *</label>
+                                {{ form.project_id(class="form-select" + (" is-invalid" if form.project_id.errors else
+                                "")) }}
+                                {% for error in form.project_id.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="assigned_to" class="form-label">{{ form.assigned_to.label.text }}</label>
+                                {{ form.assigned_to(class="form-select" + (" is-invalid" if form.assigned_to.errors else
+                                "")) }}
+                                {% for error in form.assigned_to.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="status" class="form-label">{{ form.status.label.text }} *</label>
+                                {{ form.status(class="form-select" + (" is-invalid" if form.status.errors else "")) }}
+                                {% for error in form.status.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="priority" class="form-label">{{ form.priority.label.text }} *</label>
+                                {{ form.priority(class="form-select" + (" is-invalid" if form.priority.errors else ""))
+                                }}
+                                {% for error in form.priority.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="due_date" class="form-label">{{ form.due_date.label.text }}</label>
+                                {{ form.due_date(class="form-control" + (" is-invalid" if form.due_date.errors else ""),
+                                type="date") }}
+                                {% for error in form.due_date.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg me-2"></i>{{ 'Update Task' if is_edit else 'Create Task' }}
+                            </button>
+                            <a href="{{ url_for('tasks.view_task', task_id=task.id) if is_edit else url_for('tasks.list_tasks') }}"
+                                class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

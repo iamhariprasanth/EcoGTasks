@@ -1,0 +1,12 @@
+Dear {{ user.username }},
+
+We regret to inform you that your EcoGTasks account registration has not been approved.
+
+{% if reason %}
+Reason: {{ reason }}
+{% endif %}
+
+If you believe this was a mistake, please contact the administrator.
+
+Best regards,
+The EcoGTasks Team

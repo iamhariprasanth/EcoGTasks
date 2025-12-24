@@ -1,0 +1,10 @@
+Dear {{ user.username }},
+
+Welcome to EcoGTasks!
+
+Your account has been created successfully. You can now log in and start managing your tasks.
+
+Login here: {{ url_for('auth.login', _external=True) }}
+
+Best regards,
+The EcoGTasks Team

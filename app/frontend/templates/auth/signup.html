@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block public_content %}
+<div class="container">
+    <div class="login-container mx-auto animate-fade-in">
+        <div class="login-card">
+            <!-- Logo -->
+            <div class="login-logo">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EcoG Products" class="img-fluid" style="max-height: 80px;">
+            </div>
+
+            <h2 class="text-center mb-2 fw-bold">Create Account</h2>
+            <p class="text-center text-muted mb-4">Join EcoGTasks today</p>
+
+            <!-- Registration Form -->
+            <form method="POST" action="{{ url_for('auth.signup') }}">
+                {{ form.hidden_tag() }}
+
+                <div class="mb-3">
+                    <label for="username" class="form-label">{{ form.username.label.text }}</label>
+                    {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""),
+                    placeholder="Choose a username") }}
+                    {% for error in form.username.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="email" class="form-label">{{ form.email.label.text }}</label>
+                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""),
+                    placeholder="Enter your email") }}
+                    {% for error in form.email.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">{{ form.password.label.text }}</label>
+                    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+                    placeholder="Create a password (min 6 characters)") }}
+                    {% for error in form.password.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-4">
+                    <label for="confirm_password" class="form-label">{{ form.confirm_password.label.text }}</label>
+                    {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""),
+                    placeholder="Confirm your password") }}
+                    {% for error in form.confirm_password.errors %}
+                    <div class="invalid-feedback">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    <i class="bi bi-person-check me-2"></i> Create Account
+                </button>
+            </form>
+
+            <hr class="my-4">
+
+            <div class="text-center">
+                <p class="mb-2">Already have an account?</p>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary w-100">
+                    <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+                </a>
+            </div>
+
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    <i class="bi bi-shield-lock me-1"></i>
+                    Your data is securely encrypted
+                </small>
+            </div>
+        </div>
+
+        <p class="text-center text-muted mt-4">
+            <small>&copy; {{ now().year if now else '2024' }} EcoG Products. All rights reserved.</small>
+        </p>
+    </div>
+</div>
+{% endblock %}
