@@ -100,3 +100,21 @@ def send_rejection_email(user, reason=None):
         text_body=render_template('auth/email/account_rejected.txt', user=user, reason=reason),
         html_body=render_template('auth/email/account_rejected.html', user=user, reason=reason)
     )
+
+
+def send_weekly_task_status_email(user, tasks, week_start, week_end):
+    """
+    Send weekly task status email to user.
+    
+    Args:
+        user: User object to send status to
+        tasks: Dictionary with categorized tasks (todo, in_progress, blocked)
+        week_start: Start date of the week
+        week_end: End date of the week
+    """
+    send_email(
+        subject=f'[EcoGTasks] Your Weekly Task Status - {week_start.strftime("%b %d")} to {week_end.strftime("%b %d, %Y")}',
+        recipients=[user.email],
+        text_body=render_template('auth/email/weekly_task_status.txt', user=user, tasks=tasks, week_start=week_start, week_end=week_end),
+        html_body=render_template('auth/email/weekly_task_status.html', user=user, tasks=tasks, week_start=week_start, week_end=week_end)
+    )

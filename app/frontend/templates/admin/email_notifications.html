@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1"><i class="bi bi-envelope me-2"></i>Email Notifications</h1>
+            <p class="text-muted mb-0">Send task status notifications to users</p>
+        </div>
+        <a href="{{ url_for('dashboard.admin_dashboard') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+        </a>
+    </div>
+
+    <!-- Email Configuration Status -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Email Configuration</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td class="text-muted">SMTP Server</td>
+                            <td><code>{{ email_config.server }}</code></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Port</td>
+                            <td><code>{{ email_config.port }}</code></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">TLS</td>
+                            <td>
+                                {% if email_config.use_tls %}
+                                <span class="badge bg-success">Enabled</span>
+                                {% else %}
+                                <span class="badge bg-secondary">Disabled</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Username</td>
+                            <td><code>{{ email_config.username or 'Not set' }}</code></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Status</td>
+                            <td>
+                                {% if email_config.configured %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Configured</span>
+                                {% else %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle me-1"></i>Not Configured</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                    {% if not email_config.configured %}
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Setup Required:</strong> Set environment variables <code>MAIL_USERNAME</code> and <code>MAIL_PASSWORD</code> to enable email sending.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-calendar-week me-2"></i>Current Week</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-3">
+                        <h4 class="mb-2">{{ week_start.strftime('%B %d') }} - {{ week_end.strftime('%B %d, %Y') }}</h4>
+                        <p class="text-muted mb-3">Notifications will include task status for this week</p>
+                        <div class="row text-center">
+                            <div class="col-6">
+                                <div class="border rounded p-3">
+                                    <h2 class="mb-0 text-primary">{{ total_users_with_tasks }}</h2>
+                                    <small class="text-muted">Users with Tasks</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-3">
+                                    <h2 class="mb-0 text-info">{{ user_task_summary|length }}</h2>
+                                    <small class="text-muted">Total Active Users</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-lightning me-2"></i>Quick Actions</h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <form method="POST" action="{{ url_for('admin.send_weekly_status') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary w-100 py-3" onclick="return confirm('Send weekly status email to ALL users with incomplete tasks?');">
+                            <i class="bi bi-send-fill fs-4 d-block mb-2"></i>
+                            Send to All Users
+                            <small class="d-block text-white-50">{{ total_users_with_tasks }} users with tasks</small>
+                        </button>
+                    </form>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-outline-primary w-100 py-3" onclick="selectAllUsers()">
+                        <i class="bi bi-check-all fs-4 d-block mb-2"></i>
+                        Select All
+                        <small class="d-block text-muted">Select all users below</small>
+                    </button>
+                </div>
+                <div class="col-md-4">
+                    <button type="button" class="btn btn-outline-secondary w-100 py-3" onclick="deselectAllUsers()">
+                        <i class="bi bi-x-lg fs-4 d-block mb-2"></i>
+                        Deselect All
+                        <small class="d-block text-muted">Clear selection</small>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Task Summary -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-people me-2"></i>User Task Summary</h5>
+            <span class="badge bg-primary">{{ user_task_summary|length }} users</span>
+        </div>
+        <div class="card-body p-0">
+            <form method="POST" action="{{ url_for('admin.send_status_selected') }}" id="sendSelectedForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" class="form-check-input" id="selectAll" onchange="toggleAllUsers(this)">
+                                </th>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th class="text-center">To Do</th>
+                                <th class="text-center">In Progress</th>
+                                <th class="text-center">Blocked</th>
+                                <th class="text-center">Total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in user_task_summary %}
+                            <tr class="{{ 'table-warning' if item.blocked > 0 else '' }}">
+                                <td>
+                                    {% if item.total_incomplete > 0 %}
+                                    <input type="checkbox" class="form-check-input user-checkbox" name="selected_users" value="{{ item.user.id }}">
+                                    {% else %}
+                                    <input type="checkbox" class="form-check-input" disabled>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                            <span class="text-white small">{{ item.user.username[0].upper() }}</span>
+                                        </div>
+                                        <a href="{{ url_for('admin.view_user', user_id=item.user.id) }}" class="text-decoration-none">
+                                            {{ item.user.username }}
+                                        </a>
+                                    </div>
+                                </td>
+                                <td><code class="small">{{ item.user.email }}</code></td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if item.user.role == 'admin' else 'primary' if item.user.role == 'manager' else 'secondary' }}">
+                                        {{ item.user.role|capitalize }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    {% if item.todo > 0 %}
+                                    <span class="badge bg-secondary">{{ item.todo }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if item.in_progress > 0 %}
+                                    <span class="badge bg-primary">{{ item.in_progress }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if item.blocked > 0 %}
+                                    <span class="badge bg-warning text-dark">{{ item.blocked }}</span>
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if item.total_incomplete > 0 %}
+                                    <span class="badge bg-info">{{ item.total_incomplete }}</span>
+                                    {% else %}
+                                    <span class="badge bg-success">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.total_incomplete > 0 %}
+                                    <form method="POST" action="{{ url_for('admin.send_status_to_user', user_id=item.user.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary" title="Send status email">
+                                            <i class="bi bi-envelope"></i>
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <span class="text-muted small">No tasks</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Send Selected Button -->
+                <div class="card-footer bg-dark">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">
+                            <span id="selectedCount">0</span> user(s) selected
+                        </span>
+                        <button type="submit" class="btn btn-primary" id="sendSelectedBtn" disabled>
+                            <i class="bi bi-send me-2"></i>Send to Selected Users
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAllUsers(checkbox) {
+    document.querySelectorAll('.user-checkbox').forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateSelectedCount();
+}
+
+function selectAllUsers() {
+    document.querySelectorAll('.user-checkbox').forEach(cb => {
+        cb.checked = true;
+    });
+    document.getElementById('selectAll').checked = true;
+    updateSelectedCount();
+}
+
+function deselectAllUsers() {
+    document.querySelectorAll('.user-checkbox').forEach(cb => {
+        cb.checked = false;
+    });
+    document.getElementById('selectAll').checked = false;
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const count = document.querySelectorAll('.user-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = count;
+    document.getElementById('sendSelectedBtn').disabled = count === 0;
+}
+
+// Add event listeners to checkboxes
+document.querySelectorAll('.user-checkbox').forEach(cb => {
+    cb.addEventListener('change', updateSelectedCount);
+});
+</script>
+{% endblock %}

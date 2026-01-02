@@ -26,6 +26,7 @@ class TaskStatus(Enum):
     """Task status options."""
     TODO = 'To Do'
     IN_PROGRESS = 'In Progress'
+    BLOCKED = 'Blocked'
     DONE = 'Done'
 
 
@@ -200,11 +201,38 @@ class Task(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Time tracking fields
+    estimated_hours = db.Column(db.Float, default=0)  # Original estimate in hours
+    completion_percentage = db.Column(db.Integer, default=0)  # 0-100%
+    
     # Relationships
     comments = db.relationship('Comment', backref='task', lazy='dynamic',
                               cascade='all, delete-orphan')
     history = db.relationship('TaskHistory', backref='task', lazy='dynamic',
                              cascade='all, delete-orphan')
+    time_logs = db.relationship('TimeLog', backref='task', lazy='dynamic',
+                               cascade='all, delete-orphan')
+    
+    @property
+    def logged_hours(self):
+        """Calculate total logged hours from time logs."""
+        total = db.session.query(db.func.sum(TimeLog.hours_spent)).filter(
+            TimeLog.task_id == self.id
+        ).scalar()
+        return total or 0
+    
+    @property
+    def remaining_hours(self):
+        """Calculate remaining hours."""
+        return max(0, (self.estimated_hours or 0) - self.logged_hours)
+    
+    @property
+    def calculated_completion(self):
+        """Calculate completion percentage based on logged vs estimated hours."""
+        if self.estimated_hours and self.estimated_hours > 0:
+            percentage = (self.logged_hours / self.estimated_hours) * 100
+            return min(100, int(percentage))  # Cap at 100%
+        return self.completion_percentage or 0
     
     def is_overdue(self):
         """Check if task is past due date."""
@@ -237,6 +265,36 @@ class Comment(db.Model):
     
     def __repr__(self):
         return f'<Comment {self.id} on Task {self.task_id}>'
+
+
+class TimeLog(db.Model):
+    """
+    Time log model for tracking effort on tasks.
+    
+    Attributes:
+        id: Primary key
+        task_id: Parent task
+        user_id: User who logged time
+        hours_spent: Hours worked
+        description: Work description
+        logged_date: Date when work was done
+        created_at: Creation timestamp
+    """
+    __tablename__ = 'time_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    hours_spent = db.Column(db.Float, nullable=False)
+    description = db.Column(db.String(500))
+    logged_date = db.Column(db.Date, default=datetime.utcnow().date)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationship
+    user = db.relationship('User', backref='time_logs')
+    
+    def __repr__(self):
+        return f'<TimeLog {self.hours_spent}h on Task {self.task_id}>'
 
 
 class TaskHistory(db.Model):

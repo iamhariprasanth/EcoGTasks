@@ -8,7 +8,13 @@
             <h1 class="h3 mb-1">Admin Dashboard</h1>
             <p class="text-muted mb-0">System overview and statistics</p>
         </div>
-        <div>
+        <div class="d-flex gap-2">
+            <form method="POST" action="{{ url_for('admin.send_weekly_status') }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-outline-info" onclick="return confirm('Send weekly task status email to all users with incomplete tasks?');">
+                    <i class="bi bi-envelope me-2"></i>Send Weekly Status
+                </button>
+            </form>
             <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
                 <i class="bi bi-person-plus me-2"></i>Add User
             </a>

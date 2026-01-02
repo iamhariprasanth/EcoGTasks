@@ -163,7 +163,11 @@ def employee_dashboard():
     total_assigned = assigned_tasks.count()
     todo_count = assigned_tasks.filter(Task.status == TaskStatus.TODO.value).count()
     in_progress_count = assigned_tasks.filter(Task.status == TaskStatus.IN_PROGRESS.value).count()
+    blocked_count = assigned_tasks.filter(Task.status == TaskStatus.BLOCKED.value).count()
     done_count = assigned_tasks.filter(Task.status == TaskStatus.DONE.value).count()
+    
+    # Incomplete tasks count (for weekly status)
+    incomplete_count = todo_count + in_progress_count + blocked_count
     
     # High priority tasks
     high_priority_tasks = assigned_tasks.filter(
@@ -184,15 +188,25 @@ def employee_dashboard():
     # User's projects
     user_projects = current_user.projects
     
+    # Current week tasks (incomplete only)
+    current_week_tasks = {
+        'in_progress': assigned_tasks.filter(Task.status == TaskStatus.IN_PROGRESS.value).all(),
+        'blocked': assigned_tasks.filter(Task.status == TaskStatus.BLOCKED.value).all(),
+        'todo': assigned_tasks.filter(Task.status == TaskStatus.TODO.value).all()
+    }
+    
     return render_template(
         'dashboard/employee.html',
         title='My Dashboard',
         total_assigned=total_assigned,
         todo_count=todo_count,
         in_progress_count=in_progress_count,
+        blocked_count=blocked_count,
         done_count=done_count,
+        incomplete_count=incomplete_count,
         high_priority_tasks=high_priority_tasks,
         upcoming_tasks=upcoming_tasks,
         recent_tasks=recent_tasks,
-        projects=user_projects
+        projects=user_projects,
+        current_week_tasks=current_week_tasks
     )

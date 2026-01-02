@@ -2,13 +2,14 @@
 Admin Routes
 User management and system administration.
 """
+from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
 
 from app import db
-from app.backend.models import User, Task, Project, UserRole
+from app.backend.models import User, Task, Project, UserRole, TaskStatus
 from app.backend.utils.decorators import admin_required
-from app.backend.utils.email import send_approval_email, send_rejection_email
+from app.backend.utils.email import send_approval_email, send_rejection_email, send_weekly_task_status_email
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
@@ -274,3 +275,176 @@ def reset_password(user_id):
     flash(f'Password for {user.username} has been reset to: {temp_password}', 'warning')
     
     return redirect(url_for('admin.view_user', user_id=user_id))
+
+
+@admin_bp.route('/send-weekly-status', methods=['POST'])
+@login_required
+@admin_required
+def send_weekly_status():
+    """
+    Send weekly task status email to all active users.
+    """
+    # Calculate current week (Monday to Sunday)
+    today = datetime.utcnow().date()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    
+    # Get all active and approved users
+    users = User.query.filter_by(is_active=True, is_approved=True).all()
+    sent_count = 0
+    
+    for user in users:
+        # Get user's incomplete tasks (not done)
+        user_tasks = Task.query.filter(
+            Task.assigned_to == user.id,
+            Task.status != TaskStatus.DONE.value
+        ).all()
+        
+        if user_tasks:
+            # Categorize tasks
+            tasks = {
+                'in_progress': [t for t in user_tasks if t.status == TaskStatus.IN_PROGRESS.value],
+                'blocked': [t for t in user_tasks if t.status == TaskStatus.BLOCKED.value],
+                'todo': [t for t in user_tasks if t.status == TaskStatus.TODO.value]
+            }
+            
+            # Only send if user has any incomplete tasks
+            if any(tasks.values()):
+                send_weekly_task_status_email(user, tasks, week_start, week_end)
+                sent_count += 1
+    
+    flash(f'Weekly status emails sent to {sent_count} users.', 'success')
+    return redirect(url_for('dashboard.admin_dashboard'))
+
+
+@admin_bp.route('/send-status-to-user/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def send_status_to_user(user_id):
+    """
+    Send task status email to a specific user.
+    """
+    user = User.query.get_or_404(user_id)
+    
+    # Calculate current week
+    today = datetime.utcnow().date()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    
+    # Get user's incomplete tasks
+    user_tasks = Task.query.filter(
+        Task.assigned_to == user.id,
+        Task.status != TaskStatus.DONE.value
+    ).all()
+    
+    if user_tasks:
+        tasks = {
+            'in_progress': [t for t in user_tasks if t.status == TaskStatus.IN_PROGRESS.value],
+            'blocked': [t for t in user_tasks if t.status == TaskStatus.BLOCKED.value],
+            'todo': [t for t in user_tasks if t.status == TaskStatus.TODO.value]
+        }
+        
+        send_weekly_task_status_email(user, tasks, week_start, week_end)
+        flash(f'Task status email sent to {user.username}.', 'success')
+    else:
+        flash(f'{user.username} has no incomplete tasks.', 'info')
+    
+    return redirect(url_for('admin.view_user', user_id=user_id))
+
+
+@admin_bp.route('/email-notifications')
+@login_required
+@admin_required
+def email_notifications():
+    """
+    Email notifications dashboard for managing and sending task status emails.
+    """
+    # Get all users with their task counts
+    users = User.query.filter_by(is_active=True, is_approved=True).order_by(User.username).all()
+    
+    user_task_summary = []
+    for user in users:
+        # Get incomplete tasks count
+        incomplete_tasks = Task.query.filter(
+            Task.assigned_to == user.id,
+            Task.status != TaskStatus.DONE.value
+        ).all()
+        
+        todo_count = sum(1 for t in incomplete_tasks if t.status == TaskStatus.TODO.value)
+        in_progress_count = sum(1 for t in incomplete_tasks if t.status == TaskStatus.IN_PROGRESS.value)
+        blocked_count = sum(1 for t in incomplete_tasks if t.status == TaskStatus.BLOCKED.value)
+        
+        user_task_summary.append({
+            'user': user,
+            'total_incomplete': len(incomplete_tasks),
+            'todo': todo_count,
+            'in_progress': in_progress_count,
+            'blocked': blocked_count
+        })
+    
+    # Sort by incomplete tasks (most first)
+    user_task_summary.sort(key=lambda x: x['total_incomplete'], reverse=True)
+    
+    # Email configuration status
+    email_config = {
+        'server': current_app.config.get('MAIL_SERVER', 'Not configured'),
+        'port': current_app.config.get('MAIL_PORT', 'Not configured'),
+        'use_tls': current_app.config.get('MAIL_USE_TLS', False),
+        'username': current_app.config.get('MAIL_USERNAME', 'Not configured'),
+        'configured': bool(current_app.config.get('MAIL_USERNAME') and current_app.config.get('MAIL_PASSWORD'))
+    }
+    
+    # Calculate current week
+    today = datetime.utcnow().date()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    
+    return render_template(
+        'admin/email_notifications.html',
+        title='Email Notifications',
+        user_task_summary=user_task_summary,
+        email_config=email_config,
+        week_start=week_start,
+        week_end=week_end,
+        total_users_with_tasks=sum(1 for u in user_task_summary if u['total_incomplete'] > 0)
+    )
+
+
+@admin_bp.route('/send-status-selected', methods=['POST'])
+@login_required
+@admin_required
+def send_status_selected():
+    """
+    Send task status email to selected users.
+    """
+    selected_users = request.form.getlist('selected_users')
+    
+    if not selected_users:
+        flash('No users selected.', 'warning')
+        return redirect(url_for('admin.email_notifications'))
+    
+    # Calculate current week
+    today = datetime.utcnow().date()
+    week_start = today - timedelta(days=today.weekday())
+    week_end = week_start + timedelta(days=6)
+    
+    sent_count = 0
+    for user_id in selected_users:
+        user = User.query.get(int(user_id))
+        if user:
+            user_tasks = Task.query.filter(
+                Task.assigned_to == user.id,
+                Task.status != TaskStatus.DONE.value
+            ).all()
+            
+            if user_tasks:
+                tasks = {
+                    'in_progress': [t for t in user_tasks if t.status == TaskStatus.IN_PROGRESS.value],
+                    'blocked': [t for t in user_tasks if t.status == TaskStatus.BLOCKED.value],
+                    'todo': [t for t in user_tasks if t.status == TaskStatus.TODO.value]
+                }
+                send_weekly_task_status_email(user, tasks, week_start, week_end)
+                sent_count += 1
+    
+    flash(f'Task status emails sent to {sent_count} user(s).', 'success')
+    return redirect(url_for('admin.email_notifications'))

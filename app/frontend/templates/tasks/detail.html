@@ -70,20 +70,135 @@
                     <!-- Quick Status Change -->
                     <div class="d-flex gap-2 flex-wrap">
                         <span class="text-muted me-2">Move to:</span>
-                        {% for status in ['To Do', 'In Progress', 'Done'] %}
-                        {% if status != task.status %}
+                        {% for status in TaskStatus %}
+                        {% if status.value != task.status %}
                         <form method="POST"
-                            action="{{ url_for('tasks.update_status', task_id=task.id, status=status) }}"
+                            action="{{ url_for('tasks.update_status', task_id=task.id, status=status.value) }}"
                             class="d-inline">
                             {{ comment_form.hidden_tag() }}
                             <button type="submit"
-                                class="btn btn-sm btn-outline-{{ 'secondary' if status == 'To Do' else 'primary' if status == 'In Progress' else 'success' }}">
-                                {{ status }}
+                                class="btn btn-sm btn-outline-{{ 'secondary' if status.name == 'TODO' else 'primary' if status.name == 'IN_PROGRESS' else 'warning' if status.name == 'BLOCKED' else 'success' }}">
+                                {{ status.value }}
                             </button>
                         </form>
                         {% endif %}
                         {% endfor %}
                     </div>
+                </div>
+            </div>
+
+            <!-- Time Tracking Card -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-clock me-2"></i>Time Tracking</h5>
+                </div>
+                <div class="card-body">
+                    <!-- Progress Bar -->
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold">Progress</span>
+                            <span class="badge bg-{{ 'success' if task.calculated_completion == 100 else 'primary' if task.calculated_completion >= 50 else 'secondary' }} fs-6">
+                                {{ task.calculated_completion }}%
+                            </span>
+                        </div>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-{{ 'success' if task.calculated_completion == 100 else 'primary' if task.calculated_completion >= 50 else 'info' }}" 
+                                 role="progressbar" 
+                                 style="width: {{ task.calculated_completion }}%"
+                                 aria-valuenow="{{ task.calculated_completion }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        {% if task.estimated_hours and task.estimated_hours > 0 %}
+                        <small class="text-muted">Auto-calculated from logged hours ({{ "%.1f"|format(task.logged_hours) }}h / {{ task.estimated_hours }}h)</small>
+                        {% else %}
+                        <small class="text-muted">Set estimated hours to enable auto-calculation</small>
+                        {% endif %}
+                    </div>
+
+                    <!-- Time Stats -->
+                    <div class="row text-center mb-4">
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted small">Estimated</div>
+                                <div class="fw-bold fs-5 text-info">{{ task.estimated_hours or 0 }}h</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted small">Logged</div>
+                                <div class="fw-bold fs-5 text-primary">{{ "%.1f"|format(task.logged_hours) }}h</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="border rounded p-2">
+                                <div class="text-muted small">Remaining</div>
+                                <div class="fw-bold fs-5 text-{{ 'danger' if task.remaining_hours < 0 else 'success' }}">{{ "%.1f"|format(task.remaining_hours) }}h</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Manual Progress Override (only shown if no estimated hours) -->
+                    {% if not task.estimated_hours or task.estimated_hours == 0 %}
+                    <form method="POST" action="{{ url_for('tasks.update_progress', task_id=task.id) }}" class="mb-4">
+                        {{ progress_form.hidden_tag() }}
+                        <label class="form-label">Manual Progress Update</label>
+                        <div class="input-group">
+                            {{ progress_form.completion_percentage(class="form-control", value=task.completion_percentage or 0, min="0", max="100") }}
+                            <span class="input-group-text">%</span>
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="bi bi-check-lg"></i> Update
+                            </button>
+                        </div>
+                        <small class="text-muted">Set estimated hours to enable auto-calculation</small>
+                    </form>
+                    {% endif %}
+
+                    <!-- Log Time Form -->
+                    <form method="POST" action="{{ url_for('tasks.log_time', task_id=task.id) }}">
+                        {{ time_log_form.hidden_tag() }}
+                        <label class="form-label">Log Work</label>
+                        <div class="row g-2">
+                            <div class="col-md-3">
+                                <div class="input-group">
+                                    {{ time_log_form.hours_spent(class="form-control", placeholder="Hours", step="any", min="0.1") }}
+                                    <span class="input-group-text">h</span>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                {{ time_log_form.description(class="form-control", placeholder="What did you work on?") }}
+                            </div>
+                            <div class="col-md-2">
+                                {{ time_log_form.logged_date(class="form-control", type="date") }}
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus-lg"></i> Log
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Time Logs History -->
+                    {% if time_logs %}
+                    <hr class="my-4">
+                    <h6 class="mb-3">Work Log</h6>
+                    <div class="time-logs-list">
+                        {% for log in time_logs %}
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <span class="badge bg-primary me-2">{{ log.hours_spent }}h</span>
+                                <strong>{{ log.user.username }}</strong>
+                                {% if log.description %}
+                                <span class="text-muted">- {{ log.description }}</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">{{ log.logged_date.strftime('%b %d, %Y') if log.logged_date else log.created_at.strftime('%b %d, %Y') }}</small>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 </div>
             </div>
 
@@ -237,7 +352,7 @@
             </div>
 
             <!-- Reassign Task -->
-            <div class="card">
+            <div class="card mb-4">
                 <div class="card-header">
                     <h6 class="mb-0">Reassign Task</h6>
                 </div>
@@ -253,6 +368,62 @@
                     </form>
                 </div>
             </div>
+
+            <!-- Add to Calendar -->
+            {% if task.due_date %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-calendar-plus me-2"></i>Add to Calendar</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Create a calendar event for this task's due date.</p>
+                    
+                    {% set event_title = task.title | urlencode %}
+                    {% set event_details = ("Task: " ~ task.title ~ "\nProject: " ~ task.project.name ~ "\nPriority: " ~ task.priority ~ "\nStatus: " ~ task.status ~ (("\n\nDescription:\n" ~ task.description) if task.description else "")) | urlencode %}
+                    {% set event_date = task.due_date.strftime('%Y%m%d') %}
+                    {% set event_date_outlook = task.due_date.strftime('%Y-%m-%d') %}
+                    
+                    <!-- Google Calendar -->
+                    <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text={{ event_title }}&dates={{ event_date }}/{{ event_date }}&details={{ event_details }}&sf=true" 
+                       target="_blank" 
+                       class="btn btn-outline-danger btn-sm w-100 mb-2">
+                        <i class="bi bi-google me-2"></i>Google Calendar
+                    </a>
+                    
+                    <!-- Outlook Calendar (Web) -->
+                    <a href="https://outlook.live.com/calendar/0/action/compose?subject={{ event_title }}&body={{ event_details }}&startdt={{ event_date_outlook }}&enddt={{ event_date_outlook }}&allday=true" 
+                       target="_blank" 
+                       class="btn btn-outline-primary btn-sm w-100 mb-2">
+                        <i class="bi bi-microsoft me-2"></i>Outlook.com
+                    </a>
+                    
+                    <!-- Office 365 Calendar -->
+                    <a href="https://outlook.office.com/calendar/0/action/compose?subject={{ event_title }}&body={{ event_details }}&startdt={{ event_date_outlook }}&enddt={{ event_date_outlook }}&allday=true" 
+                       target="_blank" 
+                       class="btn btn-outline-info btn-sm w-100 mb-2">
+                        <i class="bi bi-building me-2"></i>Office 365
+                    </a>
+                    
+                    <!-- Download ICS File -->
+                    <a href="{{ url_for('tasks.download_ics', task_id=task.id) }}" 
+                       class="btn btn-outline-secondary btn-sm w-100">
+                        <i class="bi bi-download me-2"></i>Download .ics File
+                    </a>
+                    <small class="text-muted d-block mt-2">ICS files work with Apple Calendar, Outlook Desktop, and other calendar apps.</small>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-calendar-plus me-2"></i>Add to Calendar</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-0">
+                        <i class="bi bi-info-circle me-1"></i>Set a due date to enable calendar integration.
+                    </p>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>

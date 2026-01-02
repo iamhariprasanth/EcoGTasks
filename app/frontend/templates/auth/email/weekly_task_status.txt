@@ -1,0 +1,47 @@
+Weekly Task Status - {{ week_start.strftime('%B %d') }} to {{ week_end.strftime('%B %d, %Y') }}
+================================================================================
+
+Hi {{ user.username }},
+
+Here's your task status for this week:
+
+SUMMARY
+-------
+- In Progress: {{ tasks.in_progress|length }}
+- Blocked: {{ tasks.blocked|length }}
+- To Do: {{ tasks.todo|length }}
+
+{% if tasks.in_progress %}
+IN PROGRESS ({{ tasks.in_progress|length }})
+--------------------------------------------
+{% for task in tasks.in_progress %}
+• {{ task.title }}
+  Project: {{ task.project.name }} | Priority: {{ task.priority }}{% if task.due_date %} | Due: {{ task.due_date.strftime('%b %d') }}{% endif %}
+
+  {% if task.estimated_hours %}Progress: {{ task.calculated_completion }}% ({{ "%.1f"|format(task.logged_hours) }}h / {{ task.estimated_hours }}h){% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if tasks.blocked %}
+BLOCKED ({{ tasks.blocked|length }})
+------------------------------------
+{% for task in tasks.blocked %}
+• {{ task.title }}
+  Project: {{ task.project.name }} | Priority: {{ task.priority }}{% if task.due_date %} | Due: {{ task.due_date.strftime('%b %d') }}{% endif %}
+
+{% endfor %}
+{% endif %}
+
+{% if tasks.todo %}
+TO DO ({{ tasks.todo|length }})
+-------------------------------
+{% for task in tasks.todo %}
+• {{ task.title }}
+  Project: {{ task.project.name }} | Priority: {{ task.priority }}{% if task.due_date %} | Due: {{ task.due_date.strftime('%b %d') }}{% endif %}
+
+{% endfor %}
+{% endif %}
+
+---
+This is an automated email from EcoGTasks.

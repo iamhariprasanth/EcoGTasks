@@ -2,13 +2,13 @@
 Task Routes
 Complete CRUD operations for tasks with comments and history.
 """
-from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from datetime import datetime, date
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, Response
 from flask_login import login_required, current_user
 
 from app import db
-from app.backend.models import Task, Project, User, Comment, TaskHistory, TaskStatus, TaskPriority
-from app.backend.utils.forms import TaskForm, CommentForm, TaskFilterForm, ReassignTaskForm
+from app.backend.models import Task, Project, User, Comment, TaskHistory, TaskStatus, TaskPriority, TimeLog
+from app.backend.utils.forms import TaskForm, CommentForm, TaskFilterForm, ReassignTaskForm, TimeLogForm, UpdateProgressForm
 from app.backend.utils.decorators import task_access_required, project_access_required
 
 tasks_bp = Blueprint('tasks', __name__, url_prefix='/tasks')
@@ -158,15 +158,21 @@ def view_task(task_id):
     task = Task.query.get_or_404(task_id)
     comment_form = CommentForm()
     reassign_form = ReassignTaskForm()
+    time_log_form = TimeLogForm()
+    progress_form = UpdateProgressForm()
+    
+    # Set default date for time log
+    time_log_form.logged_date.data = date.today()
     
     # Populate reassign choices
     reassign_form.assigned_to.choices = [(0, 'Unassigned')] + [
         (u.id, u.username) for u in User.query.filter_by(is_active=True).order_by(User.username).all()
     ]
     
-    # Get comments and history
+    # Get comments, history, and time logs
     comments = Comment.query.filter_by(task_id=task_id).order_by(Comment.created_at.desc()).all()
     history = TaskHistory.query.filter_by(task_id=task_id).order_by(TaskHistory.created_at.desc()).all()
+    time_logs = TimeLog.query.filter_by(task_id=task_id).order_by(TimeLog.created_at.desc()).all()
     
     return render_template(
         'tasks/detail.html',
@@ -174,8 +180,12 @@ def view_task(task_id):
         task=task,
         comment_form=comment_form,
         reassign_form=reassign_form,
+        time_log_form=time_log_form,
+        progress_form=progress_form,
         comments=comments,
-        history=history
+        history=history,
+        time_logs=time_logs,
+        TaskStatus=TaskStatus
     )
 
 
@@ -340,6 +350,12 @@ def update_status(task_id, status):
     old_status = task.status
     task.status = status
     
+    # Auto-update completion percentage based on status
+    if status == TaskStatus.DONE.value:
+        task.completion_percentage = 100
+    elif status == TaskStatus.TODO.value:
+        task.completion_percentage = 0
+    
     # Log status change
     log_task_history(task, current_user, 'status_changed', 'status', old_status, status)
     
@@ -347,3 +363,144 @@ def update_status(task_id, status):
     flash(f'Task status updated to {status}.', 'success')
     
     return redirect(url_for('tasks.view_task', task_id=task_id))
+
+
+@tasks_bp.route('/<int:task_id>/log-time', methods=['POST'])
+@login_required
+@task_access_required
+def log_time(task_id):
+    """
+    Log time spent on a task.
+    """
+    task = Task.query.get_or_404(task_id)
+    form = TimeLogForm()
+    
+    if form.validate_on_submit():
+        time_log = TimeLog(
+            task_id=task_id,
+            user_id=current_user.id,
+            hours_spent=float(form.hours_spent.data),
+            description=form.description.data,
+            logged_date=form.logged_date.data or date.today()
+        )
+        db.session.add(time_log)
+        
+        # Log to history
+        log_task_history(task, current_user, 'logged_time', 'hours', None, f'{form.hours_spent.data}h')
+        
+        db.session.commit()
+        flash(f'Logged {form.hours_spent.data} hours successfully.', 'success')
+    else:
+        flash('Error logging time. Please check your input.', 'danger')
+    
+    return redirect(url_for('tasks.view_task', task_id=task_id))
+
+
+@tasks_bp.route('/<int:task_id>/update-progress', methods=['POST'])
+@login_required
+@task_access_required
+def update_progress(task_id):
+    """
+    Update task completion percentage.
+    """
+    task = Task.query.get_or_404(task_id)
+    form = UpdateProgressForm()
+    
+    if form.validate_on_submit():
+        old_percentage = task.completion_percentage or 0
+        new_percentage = form.completion_percentage.data
+        task.completion_percentage = new_percentage
+        
+        # Auto-update status based on completion
+        if new_percentage == 100 and task.status != TaskStatus.DONE.value:
+            old_status = task.status
+            task.status = TaskStatus.DONE.value
+            log_task_history(task, current_user, 'status_changed', 'status', old_status, TaskStatus.DONE.value)
+        elif new_percentage > 0 and new_percentage < 100 and task.status == TaskStatus.TODO.value:
+            old_status = task.status
+            task.status = TaskStatus.IN_PROGRESS.value
+            log_task_history(task, current_user, 'status_changed', 'status', old_status, TaskStatus.IN_PROGRESS.value)
+        
+        # Log progress change
+        log_task_history(task, current_user, 'progress_updated', 'completion', f'{old_percentage}%', f'{new_percentage}%')
+        
+        db.session.commit()
+        flash(f'Progress updated to {new_percentage}%.', 'success')
+    else:
+        flash('Error updating progress. Please enter a value between 0 and 100.', 'danger')
+    
+    return redirect(url_for('tasks.view_task', task_id=task_id))
+
+
+@tasks_bp.route('/<int:task_id>/download-ics')
+@login_required
+@task_access_required
+def download_ics(task_id):
+    """
+    Generate and download an ICS calendar file for the task.
+    Works with Apple Calendar, Outlook Desktop, Google Calendar, and other calendar apps.
+    """
+    task = Task.query.get_or_404(task_id)
+    
+    if not task.due_date:
+        flash('This task does not have a due date set.', 'warning')
+        return redirect(url_for('tasks.view_task', task_id=task_id))
+    
+    # Generate unique ID for the event
+    uid = f"task-{task.id}@ecog-tasks"
+    
+    # Format dates for ICS (YYYYMMDD for all-day events)
+    event_date = task.due_date.strftime('%Y%m%d')
+    # End date should be the next day for all-day events
+    from datetime import timedelta
+    end_date = (task.due_date + timedelta(days=1)).strftime('%Y%m%d')
+    
+    # Current timestamp for DTSTAMP
+    dtstamp = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
+    
+    # Build description
+    description_parts = [
+        f"Task: {task.title}",
+        f"Project: {task.project.name}",
+        f"Priority: {task.priority}",
+        f"Status: {task.status}"
+    ]
+    if task.assignee:
+        description_parts.append(f"Assigned to: {task.assignee.username}")
+    if task.description:
+        description_parts.append(f"\\nDescription:\\n{task.description}")
+    
+    # Escape special characters for ICS format
+    description = "\\n".join(description_parts)
+    description = description.replace('\n', '\\n').replace(',', '\\,').replace(';', '\\;')
+    
+    summary = task.title.replace(',', '\\,').replace(';', '\\;')
+    
+    # Build ICS content
+    ics_content = f"""BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//EcoGTasks//Task Management//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:{uid}
+DTSTAMP:{dtstamp}
+DTSTART;VALUE=DATE:{event_date}
+DTEND;VALUE=DATE:{end_date}
+SUMMARY:{summary}
+DESCRIPTION:{description}
+PRIORITY:{1 if task.priority == 'High' else 5 if task.priority == 'Medium' else 9}
+STATUS:{'COMPLETED' if task.status == 'Done' else 'IN-PROCESS' if task.status == 'In Progress' else 'NEEDS-ACTION'}
+END:VEVENT
+END:VCALENDAR"""
+    
+    # Create response with ICS file
+    response = Response(
+        ics_content,
+        mimetype='text/calendar',
+        headers={
+            'Content-Disposition': f'attachment; filename=task-{task.id}-{task.title[:30].replace(" ", "-")}.ics'
+        }
+    )
+    
+    return response

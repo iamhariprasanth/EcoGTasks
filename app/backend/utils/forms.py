@@ -5,9 +5,10 @@ Provides form classes with CSRF protection and validation.
 from datetime import date
 from flask_wtf import FlaskForm
 from wtforms import (StringField, PasswordField, TextAreaField, SelectField,
-                     DateField, SubmitField, BooleanField, HiddenField)
+                     DateField, SubmitField, BooleanField, HiddenField,
+                     DecimalField, IntegerField)
 from wtforms.validators import (DataRequired, Email, Length, EqualTo,
-                                 ValidationError, Optional)
+                                 ValidationError, Optional, NumberRange)
 
 from app.backend.models import User, UserRole, TaskStatus, TaskPriority
 
@@ -131,6 +132,7 @@ class TaskForm(FlaskForm):
     status = SelectField('Status', choices=[
         (TaskStatus.TODO.value, 'To Do'),
         (TaskStatus.IN_PROGRESS.value, 'In Progress'),
+        (TaskStatus.BLOCKED.value, 'Blocked'),
         (TaskStatus.DONE.value, 'Done')
     ], validators=[DataRequired()])
     priority = SelectField('Priority', choices=[
@@ -141,6 +143,14 @@ class TaskForm(FlaskForm):
     assigned_to = SelectField('Assign To', coerce=int, validators=[Optional()])
     project_id = SelectField('Project', coerce=int, validators=[DataRequired()])
     due_date = DateField('Due Date', validators=[Optional()], format='%Y-%m-%d')
+    estimated_hours = DecimalField('Estimated Hours', validators=[
+        Optional(),
+        NumberRange(min=0, max=9999, message='Hours must be between 0 and 9999')
+    ], places=1)
+    completion_percentage = IntegerField('Completion %', validators=[
+        Optional(),
+        NumberRange(min=0, max=100, message='Percentage must be between 0 and 100')
+    ], default=0)
     submit = SubmitField('Save Task')
     
     def validate_due_date(self, due_date):
@@ -183,6 +193,7 @@ class TaskFilterForm(FlaskForm):
         ('', 'All Statuses'),
         (TaskStatus.TODO.value, 'To Do'),
         (TaskStatus.IN_PROGRESS.value, 'In Progress'),
+        (TaskStatus.BLOCKED.value, 'Blocked'),
         (TaskStatus.DONE.value, 'Done')
     ], validators=[Optional()])
     priority = SelectField('Priority', choices=[
@@ -201,3 +212,26 @@ class ReassignTaskForm(FlaskForm):
     """Form to reassign a task."""
     assigned_to = SelectField('Reassign To', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Reassign')
+
+
+class TimeLogForm(FlaskForm):
+    """Form to log time spent on a task."""
+    hours_spent = DecimalField('Hours Spent', validators=[
+        DataRequired(message='Hours spent is required'),
+        NumberRange(min=0.1, max=24, message='Hours must be between 0.1 and 24')
+    ], places=1)
+    description = StringField('Work Description', validators=[
+        Optional(),
+        Length(max=500, message='Description must be less than 500 characters')
+    ])
+    logged_date = DateField('Date', validators=[Optional()], format='%Y-%m-%d')
+    submit = SubmitField('Log Time')
+
+
+class UpdateProgressForm(FlaskForm):
+    """Form to update task completion percentage."""
+    completion_percentage = IntegerField('Completion %', validators=[
+        DataRequired(),
+        NumberRange(min=0, max=100, message='Percentage must be between 0 and 100')
+    ])
+    submit = SubmitField('Update Progress')
