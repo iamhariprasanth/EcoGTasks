@@ -3,6 +3,11 @@ Application Entry Point
 Run with: python run.py
 """
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from app import create_app
 
 # Create Flask application instance

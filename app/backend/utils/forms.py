@@ -235,3 +235,31 @@ class UpdateProgressForm(FlaskForm):
         NumberRange(min=0, max=100, message='Percentage must be between 0 and 100')
     ])
     submit = SubmitField('Update Progress')
+
+
+class EmailConfigForm(FlaskForm):
+    """Form to configure email settings."""
+    mail_server = StringField('SMTP Server', validators=[
+        DataRequired(message='SMTP server is required'),
+        Length(max=255, message='Server must be less than 255 characters')
+    ])
+    mail_port = IntegerField('Port', validators=[
+        DataRequired(message='Port is required'),
+        NumberRange(min=1, max=65535, message='Port must be between 1 and 65535')
+    ])
+    mail_use_tls = BooleanField('Use TLS')
+    mail_use_ssl = BooleanField('Use SSL')
+    mail_username = StringField('Username/Email', validators=[
+        DataRequired(message='Username is required'),
+        Length(max=255, message='Username must be less than 255 characters')
+    ])
+    mail_password = PasswordField('Password/App Password', validators=[
+        Optional(),
+        Length(max=255, message='Password must be less than 255 characters')
+    ])
+    mail_default_sender = StringField('Default Sender Email', validators=[
+        Optional(),
+        Email(message='Please enter a valid email address'),
+        Length(max=255)
+    ])
+    submit = SubmitField('Save Configuration')

@@ -9,6 +9,20 @@ from datetime import timedelta
 basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 
+def get_database_uri():
+    """Get database URI, ensuring absolute path for SQLite."""
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url:
+        # If it's a relative SQLite path, make it absolute
+        if db_url.startswith('sqlite:///') and not db_url.startswith('sqlite:////'):
+            # Extract the relative path and make it absolute
+            relative_path = db_url[10:]  # Remove 'sqlite:///'
+            if not os.path.isabs(relative_path):
+                return 'sqlite:///' + os.path.join(basedir, relative_path)
+        return db_url
+    return 'sqlite:///' + os.path.join(basedir, 'instance', 'taskmanager.db')
+
+
 class Config:
     """Base configuration class with security best practices."""
     
@@ -22,8 +36,7 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-super-secret-key-change-in-production'
     
     # SQLite Database configuration
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'sqlite:///' + os.path.join(basedir, 'instance', 'taskmanager.db')
+    SQLALCHEMY_DATABASE_URI = get_database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Session configuration for security
