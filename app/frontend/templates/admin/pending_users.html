@@ -42,7 +42,7 @@
                             </td>
                             <td>{{ user.email }}</td>
                             <td>
-                                {{ user.created_at.strftime('%b %d, %Y at %H:%M') }}
+                                {{ user.created_at|ist_datetime('%b %d, %Y at %I:%M %p') }} IST
                             </td>
                             <td class="text-center">
                                 <div class="btn-group" role="group">

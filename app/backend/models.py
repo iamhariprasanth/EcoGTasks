@@ -2,7 +2,7 @@
 SQLAlchemy Database Models
 Defines User, Project, Task, Comment, and TaskHistory models with relationships.
 """
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from enum import Enum
 from time import time
 import jwt
@@ -12,6 +12,19 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import db, login_manager
+
+# IST Timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def get_ist_now():
+    """Get current datetime in IST timezone."""
+    return datetime.now(IST)
+
+
+def get_ist_date():
+    """Get current date in IST timezone."""
+    return datetime.now(IST).date()
 
 
 # Enums for task management
@@ -42,7 +55,7 @@ project_members = db.Table(
     'project_members',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True),
     db.Column('project_id', db.Integer, db.ForeignKey('projects.id'), primary_key=True),
-    db.Column('joined_at', db.DateTime, default=datetime.utcnow)
+    db.Column('joined_at', db.DateTime, default=get_ist_now)
 )
 
 
@@ -70,7 +83,7 @@ class User(UserMixin, db.Model):
     role = db.Column(db.String(20), nullable=False, default=UserRole.EMPLOYEE.value)
     is_active = db.Column(db.Boolean, default=True)
     is_approved = db.Column(db.Boolean, default=False)  # New field for admin approval
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_ist_now)
     last_login = db.Column(db.DateTime)
     
     # Relationships
@@ -159,7 +172,7 @@ class Project(db.Model):
     name = db.Column(db.String(100), nullable=False, index=True)
     description = db.Column(db.Text)
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_ist_now)
     is_active = db.Column(db.Boolean, default=True)
     
     # Relationships
@@ -198,8 +211,8 @@ class Task(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False, index=True)
     due_date = db.Column(db.Date)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_ist_now)
+    updated_at = db.Column(db.DateTime, default=get_ist_now, onupdate=get_ist_now)
     
     # Time tracking fields
     estimated_hours = db.Column(db.Float, default=0)  # Original estimate in hours
@@ -237,7 +250,7 @@ class Task(db.Model):
     def is_overdue(self):
         """Check if task is past due date."""
         if self.due_date and self.status != TaskStatus.DONE.value:
-            return self.due_date < datetime.utcnow().date()
+            return self.due_date < get_ist_date()
         return False
     
     def __repr__(self):
@@ -261,7 +274,7 @@ class Comment(db.Model):
     task_id = db.Column(db.Integer, db.ForeignKey('tasks.id'), nullable=False, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_ist_now)
     
     def __repr__(self):
         return f'<Comment {self.id} on Task {self.task_id}>'
@@ -287,8 +300,8 @@ class TimeLog(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     hours_spent = db.Column(db.Float, nullable=False)
     description = db.Column(db.String(500))
-    logged_date = db.Column(db.Date, default=datetime.utcnow().date)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    logged_date = db.Column(db.Date, default=get_ist_date)
+    created_at = db.Column(db.DateTime, default=get_ist_now)
     
     # Relationship
     user = db.relationship('User', backref='time_logs')
@@ -320,7 +333,7 @@ class TaskHistory(db.Model):
     field_name = db.Column(db.String(50))
     old_value = db.Column(db.String(500))
     new_value = db.Column(db.String(500))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=get_ist_now)
     
     # Relationship
     user = db.relationship('User', backref='task_changes')

@@ -118,3 +118,49 @@ def send_weekly_task_status_email(user, tasks, week_start, week_end):
         text_body=render_template('auth/email/weekly_task_status.txt', user=user, tasks=tasks, week_start=week_start, week_end=week_end),
         html_body=render_template('auth/email/weekly_task_status.html', user=user, tasks=tasks, week_start=week_start, week_end=week_end)
     )
+
+
+def send_task_created_email(task, creator):
+    """
+    Send notification email when a new task is created.
+    
+    Args:
+        task: Task object that was created
+        creator: User who created the task
+    """
+    # Notify the assignee if task is assigned to someone other than the creator
+    if task.assignee and task.assignee.id != creator.id:
+        send_email(
+            subject=f'[EcoGTasks] New Task Assigned: {task.title}',
+            recipients=[task.assignee.email],
+            text_body=render_template('auth/email/task_assigned.txt', task=task, creator=creator, is_new=True),
+            html_body=render_template('auth/email/task_assigned.html', task=task, creator=creator, is_new=True)
+        )
+
+
+def send_task_assigned_email(task, assigner, old_assignee=None):
+    """
+    Send notification email when a task is assigned or reassigned.
+    
+    Args:
+        task: Task object that was assigned
+        assigner: User who made the assignment
+        old_assignee: Previous assignee (if reassignment)
+    """
+    # Notify the new assignee
+    if task.assignee and task.assignee.id != assigner.id:
+        send_email(
+            subject=f'[EcoGTasks] Task Assigned to You: {task.title}',
+            recipients=[task.assignee.email],
+            text_body=render_template('auth/email/task_assigned.txt', task=task, assigner=assigner, is_new=False),
+            html_body=render_template('auth/email/task_assigned.html', task=task, assigner=assigner, is_new=False)
+        )
+    
+    # Optionally notify the old assignee that they've been unassigned
+    if old_assignee and old_assignee.id != assigner.id:
+        send_email(
+            subject=f'[EcoGTasks] Task Reassigned: {task.title}',
+            recipients=[old_assignee.email],
+            text_body=render_template('auth/email/task_unassigned.txt', task=task, assigner=assigner, new_assignee=task.assignee),
+            html_body=render_template('auth/email/task_unassigned.html', task=task, assigner=assigner, new_assignee=task.assignee)
+        )

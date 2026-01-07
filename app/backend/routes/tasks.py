@@ -10,6 +10,7 @@ from app import db
 from app.backend.models import Task, Project, User, Comment, TaskHistory, TaskStatus, TaskPriority, TimeLog
 from app.backend.utils.forms import TaskForm, CommentForm, TaskFilterForm, ReassignTaskForm, TimeLogForm, UpdateProgressForm
 from app.backend.utils.decorators import task_access_required, project_access_required
+from app.backend.utils.email import send_task_created_email, send_task_assigned_email
 
 tasks_bp = Blueprint('tasks', __name__, url_prefix='/tasks')
 
@@ -142,6 +143,10 @@ def create_task():
         
         db.session.commit()
         
+        # Send email notification if task is assigned
+        if task.assigned_to:
+            send_task_created_email(task, current_user)
+        
         flash('Task created successfully!', 'success')
         return redirect(url_for('tasks.view_task', task_id=task.id))
     
@@ -224,6 +229,14 @@ def edit_task(task_id):
             old_assignee = User.query.get(task.assigned_to).username if task.assigned_to else 'Unassigned'
             new_assignee = User.query.get(form.assigned_to.data).username if form.assigned_to.data else 'Unassigned'
             changes.append(('assigned_to', old_assignee, new_assignee))
+            # Store old assignee user object for email notification
+            old_assignee_user = User.query.get(task.assigned_to) if task.assigned_to else None
+        else:
+            old_assignee_user = None
+        
+        # Store new assignee ID before updating
+        new_assignee_id = form.assigned_to.data if form.assigned_to.data else None
+        assignee_changed = task.assigned_to != new_assignee_id
         
         # Update task
         task.title = form.title.data
@@ -239,6 +252,10 @@ def edit_task(task_id):
             log_task_history(task, current_user, 'updated', field, old_val, new_val)
         
         db.session.commit()
+        
+        # Send email notification if assignee changed
+        if assignee_changed and task.assigned_to:
+            send_task_assigned_email(task, current_user, old_assignee_user)
         
         flash('Task updated successfully!', 'success')
         return redirect(url_for('tasks.view_task', task_id=task.id))
@@ -317,6 +334,7 @@ def reassign_task(task_id):
     
     if form.validate_on_submit():
         old_assignee = User.query.get(task.assigned_to).username if task.assigned_to else 'Unassigned'
+        old_assignee_user = User.query.get(task.assigned_to) if task.assigned_to else None
         new_assignee_id = form.assigned_to.data if form.assigned_to.data else None
         new_assignee = User.query.get(new_assignee_id).username if new_assignee_id else 'Unassigned'
         
@@ -326,6 +344,11 @@ def reassign_task(task_id):
         log_task_history(task, current_user, 'reassigned', 'assigned_to', old_assignee, new_assignee)
         
         db.session.commit()
+        
+        # Send email notification to new assignee
+        if new_assignee_id:
+            send_task_assigned_email(task, current_user, old_assignee_user)
+        
         flash(f'Task reassigned to {new_assignee}.', 'success')
     else:
         flash('Error reassigning task.', 'danger')

@@ -1,0 +1,36 @@
+{% if is_new %}
+New Task Assigned - EcoGTasks
+=============================
+
+Hi {{ task.assignee.username }},
+
+A new task has been created and assigned to you by {{ creator.username }}.
+{% else %}
+Task Assigned to You - EcoGTasks
+================================
+
+Hi {{ task.assignee.username }},
+
+You have been assigned to a task by {{ assigner.username }}.
+{% endif %}
+
+TASK DETAILS
+------------
+Title: {{ task.title }}
+{% if task.description %}
+Description: {{ task.description[:300] }}{% if task.description|length > 300 %}...{% endif %}
+{% endif %}
+Project: {{ task.project.name }}
+Status: {{ task.status }}
+Priority: {{ task.priority }}
+{% if task.due_date %}
+Due Date: {{ task.due_date.strftime('%b %d, %Y') }}{% if task.is_overdue() %} (OVERDUE!){% endif %}
+{% endif %}
+{% if task.estimated_hours %}
+Estimated Hours: {{ task.estimated_hours }}
+{% endif %}
+
+View the task here: {{ url_for('tasks.view_task', task_id=task.id, _external=True) }}
+
+---
+This is an automated notification from EcoGTasks.

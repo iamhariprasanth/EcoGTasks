@@ -86,10 +86,10 @@
                                 <span class="badge bg-secondary">Inactive</span>
                                 {% endif %}
                             </td>
-                            <td>{{ user.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ user.created_at|ist_datetime('%b %d, %Y %I:%M %p') }}</td>
                             <td>
                                 {% if user.last_login %}
-                                {{ user.last_login.strftime('%b %d, %Y') }}
+                                {{ user.last_login|ist_datetime('%b %d, %Y %I:%M %p') }}
                                 {% else %}
                                 <span class="text-muted">Never</span>
                                 {% endif %}

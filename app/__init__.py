@@ -5,6 +5,7 @@ Initializes Flask app with extensions and blueprints.
 import os
 import logging
 from logging.handlers import RotatingFileHandler
+from datetime import datetime, timezone, timedelta
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -13,6 +14,9 @@ from flask_wtf.csrf import CSRFProtect
 from flask_mail import Mail
 
 from app.backend.config import config
+
+# IST Timezone (UTC+5:30)
+IST = timezone(timedelta(hours=5, minutes=30))
 
 # Initialize Flask extensions
 db = SQLAlchemy()
@@ -82,6 +86,31 @@ def create_app(config_name=None):
     # Create database tables
     with app.app_context():
         db.create_all()
+    
+    # Register template filters for IST time
+    @app.template_filter('ist_datetime')
+    def ist_datetime_filter(dt, format='%d %b %Y, %I:%M %p IST'):
+        """Convert datetime to IST and format it."""
+        if dt is None:
+            return ''
+        if dt.tzinfo is None:
+            # Assume the datetime is already in IST
+            return dt.strftime(format)
+        return dt.astimezone(IST).strftime(format)
+    
+    @app.template_filter('ist_date')
+    def ist_date_filter(dt, format='%d %b %Y'):
+        """Format date for display."""
+        if dt is None:
+            return ''
+        if hasattr(dt, 'strftime'):
+            return dt.strftime(format)
+        return str(dt)
+    
+    @app.context_processor
+    def inject_ist_now():
+        """Inject current IST time into all templates."""
+        return {'ist_now': datetime.now(IST)}
     
     return app
 

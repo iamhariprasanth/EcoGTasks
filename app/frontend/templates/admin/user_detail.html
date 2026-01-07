@@ -134,13 +134,13 @@
                         </tr>
                         <tr>
                             <td class="text-muted">Created At</td>
-                            <td>{{ user.created_at.strftime('%B %d, %Y at %H:%M') }}</td>
+                            <td>{{ user.created_at|ist_datetime('%B %d, %Y at %I:%M %p') }} IST</td>
                         </tr>
                         <tr>
                             <td class="text-muted">Last Login</td>
                             <td>
                                 {% if user.last_login %}
-                                {{ user.last_login.strftime('%B %d, %Y at %H:%M') }}
+                                {{ user.last_login|ist_datetime('%B %d, %Y at %I:%M %p') }} IST
                                 {% else %}
                                 <span class="text-muted">Never logged in</span>
                                 {% endif %}

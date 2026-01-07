@@ -194,7 +194,7 @@
                                 <span class="text-muted">- {{ log.description }}</span>
                                 {% endif %}
                             </div>
-                            <small class="text-muted">{{ log.logged_date.strftime('%b %d, %Y') if log.logged_date else log.created_at.strftime('%b %d, %Y') }}</small>
+                            <small class="text-muted">{{ (log.logged_date|ist_date) if log.logged_date else (log.created_at|ist_datetime('%b %d, %Y')) }}</small>
                         </div>
                         {% endfor %}
                     </div>
@@ -242,8 +242,7 @@
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <strong>{{ comment.author.username }}</strong>
-                                        <small class="text-muted">{{ comment.created_at.strftime('%b %d, %Y %H:%M')
-                                            }}</small>
+                                        <small class="text-muted">{{ comment.created_at|ist_datetime('%b %d, %Y %H:%M') }} IST</small>
                                     </div>
                                     <p class="mb-0">{{ comment.content }}</p>
                                 </div>
@@ -281,7 +280,7 @@
                                     {% endif %}
                                     {% endif %}
                                 </div>
-                                <small class="text-muted">{{ item.created_at.strftime('%b %d, %H:%M') }}</small>
+                                <small class="text-muted">{{ item.created_at|ist_datetime('%b %d, %H:%M') }} IST</small>
                             </div>
                         </div>
                         {% endfor %}
@@ -333,11 +332,11 @@
                         </tr>
                         <tr>
                             <td class="text-muted">Created</td>
-                            <td>{{ task.created_at.strftime('%b %d, %Y') }}</td>
+                            <td>{{ task.created_at|ist_datetime('%b %d, %Y %I:%M %p') }} IST</td>
                         </tr>
                         <tr>
                             <td class="text-muted">Updated</td>
-                            <td>{{ task.updated_at.strftime('%b %d, %Y %H:%M') }}</td>
+                            <td>{{ task.updated_at|ist_datetime('%b %d, %Y %I:%M %p') }} IST</td>
                         </tr>
                         {% if task.due_date %}
                         <tr>

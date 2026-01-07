@@ -66,7 +66,7 @@
                 </div>
                 <div class="card-footer border-top d-flex justify-content-between">
                     <small class="text-muted">
-                        Created {{ item.project.created_at.strftime('%b %d, %Y') }}
+                        Created {{ item.project.created_at|ist_datetime('%b %d, %Y %I:%M %p') }} IST
                     </small>
                     <a href="{{ url_for('projects.view_project', project_id=item.project.id) }}"
                         class="btn btn-sm btn-outline-primary">

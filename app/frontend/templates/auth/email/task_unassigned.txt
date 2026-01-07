@@ -1,0 +1,18 @@
+Task Reassigned - EcoGTasks
+===========================
+
+Hi there,
+
+A task that was previously assigned to you has been reassigned by {{ assigner.username }}.
+
+TASK DETAILS
+------------
+Title: {{ task.title }}
+Project: {{ task.project.name }}
+New Assignee: {{ new_assignee.username if new_assignee else 'Unassigned' }}
+Reassigned by: {{ assigner.username }}
+
+This task is no longer assigned to you. No further action is required.
+
+---
+This is an automated notification from EcoGTasks.

@@ -2,12 +2,12 @@
 Admin Routes
 User management and system administration.
 """
-from datetime import datetime, timedelta
+from datetime import timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
 
 from app import db
-from app.backend.models import User, Task, Project, UserRole, TaskStatus
+from app.backend.models import User, Task, Project, UserRole, TaskStatus, get_ist_now, get_ist_date
 from app.backend.utils.decorators import admin_required
 from app.backend.utils.email import send_approval_email, send_rejection_email, send_weekly_task_status_email
 
@@ -284,8 +284,8 @@ def send_weekly_status():
     """
     Send weekly task status email to all active users.
     """
-    # Calculate current week (Monday to Sunday)
-    today = datetime.utcnow().date()
+    # Calculate current week (Monday to Sunday) in IST
+    today = get_ist_date()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
     
@@ -326,8 +326,8 @@ def send_status_to_user(user_id):
     """
     user = User.query.get_or_404(user_id)
     
-    # Calculate current week
-    today = datetime.utcnow().date()
+    # Calculate current week in IST
+    today = get_ist_date()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
     
@@ -394,8 +394,8 @@ def email_notifications():
         'configured': bool(current_app.config.get('MAIL_USERNAME') and current_app.config.get('MAIL_PASSWORD'))
     }
     
-    # Calculate current week
-    today = datetime.utcnow().date()
+    # Calculate current week in IST
+    today = get_ist_date()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
     
@@ -423,8 +423,8 @@ def send_status_selected():
         flash('No users selected.', 'warning')
         return redirect(url_for('admin.email_notifications'))
     
-    # Calculate current week
-    today = datetime.utcnow().date()
+    # Calculate current week in IST
+    today = get_ist_date()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
     

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Reassigned - EcoGTasks</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0d1117; color: #c9d1d9;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #161b22; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 30px 40px; background: linear-gradient(135deg, #6e7681 0%, #8b949e 100%); text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
+                                🔄 Task Reassigned
+                            </h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #c9d1d9;">
+                                Hi <strong style="color: #58a6ff;">{{ task.assignee.username if task.assignee else 'there' }}</strong>,
+                            </p>
+                            
+                            <p style="margin: 0 0 30px; font-size: 16px; line-height: 1.6; color: #8b949e;">
+                                A task that was previously assigned to you has been reassigned by <strong style="color: #c9d1d9;">{{ assigner.username }}</strong>.
+                            </p>
+                            
+                            <!-- Task Card -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #21262d; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h2 style="margin: 0 0 15px; font-size: 20px; color: #8b949e;">
+                                            {{ task.title }}
+                                        </h2>
+                                        
+                                        <!-- Reassignment Info -->
+                                        <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                            <tr>
+                                                <td style="padding: 8px 0; border-top: 1px solid #30363d;">
+                                                    <span style="color: #8b949e; font-size: 13px;">📁 Project:</span>
+                                                    <span style="color: #c9d1d9; font-size: 13px; float: right;">{{ task.project.name }}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; border-top: 1px solid #30363d;">
+                                                    <span style="color: #8b949e; font-size: 13px;">👤 New Assignee:</span>
+                                                    <span style="color: #58a6ff; font-size: 13px; float: right; font-weight: 600;">
+                                                        {{ new_assignee.username if new_assignee else 'Unassigned' }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; border-top: 1px solid #30363d;">
+                                                    <span style="color: #8b949e; font-size: 13px;">🔄 Reassigned by:</span>
+                                                    <span style="color: #c9d1d9; font-size: 13px; float: right;">{{ assigner.username }}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #8b949e; text-align: center;">
+                                This task is no longer assigned to you. No further action is required.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #0d1117; border-top: 1px solid #30363d; text-align: center;">
+                            <p style="margin: 0 0 10px; font-size: 13px; color: #8b949e;">
+                                This is an automated notification from EcoGTasks.
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #6e7681;">
+                                © {{ now().year if now is defined else 2026 }} EcoGTasks - Task Management System
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

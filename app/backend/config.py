@@ -12,6 +12,11 @@ basedir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 class Config:
     """Base configuration class with security best practices."""
     
+    # Timezone configuration - IST (Indian Standard Time)
+    TIMEZONE = 'Asia/Kolkata'
+    TIMEZONE_OFFSET_HOURS = 5
+    TIMEZONE_OFFSET_MINUTES = 30
+    
     # Secret key for session management and CSRF protection
     # In production, use environment variable: os.environ.get('SECRET_KEY')
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-super-secret-key-change-in-production'

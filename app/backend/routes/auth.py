@@ -2,12 +2,11 @@
 Authentication Routes
 Handles user login, logout, registration, and password reset.
 """
-from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 
 from app import db
-from app.backend.models import User, UserRole
+from app.backend.models import User, UserRole, get_ist_now
 from app.backend.utils.forms import (
     LoginForm, RegistrationForm, PublicRegistrationForm,
     ForgotPasswordForm, ResetPasswordForm
@@ -50,7 +49,7 @@ def login():
         
         # Log in the user
         login_user(user, remember=form.remember_me.data)
-        user.last_login = datetime.utcnow()
+        user.last_login = get_ist_now()
         db.session.commit()
         
         flash(f'Welcome back, {user.username}!', 'success')

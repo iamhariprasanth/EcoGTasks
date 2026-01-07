@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Assigned - EcoGTasks</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0d1117; color: #c9d1d9;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #161b22; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 30px 40px; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 600;">
+                                {% if is_new %}
+                                🎯 New Task Assigned
+                                {% else %}
+                                📋 Task Assigned to You
+                                {% endif %}
+                            </h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Main Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #c9d1d9;">
+                                Hi <strong style="color: #58a6ff;">{{ task.assignee.username }}</strong>,
+                            </p>
+                            
+                            <p style="margin: 0 0 30px; font-size: 16px; line-height: 1.6; color: #8b949e;">
+                                {% if is_new %}
+                                A new task has been created and assigned to you by <strong style="color: #c9d1d9;">{{ creator.username }}</strong>.
+                                {% else %}
+                                You have been assigned to a task by <strong style="color: #c9d1d9;">{{ assigner.username }}</strong>.
+                                {% endif %}
+                            </p>
+                            
+                            <!-- Task Card -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #21262d; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <h2 style="margin: 0 0 15px; font-size: 20px; color: #58a6ff;">
+                                            {{ task.title }}
+                                        </h2>
+                                        
+                                        {% if task.description %}
+                                        <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #8b949e;">
+                                            {{ task.description[:200] }}{% if task.description|length > 200 %}...{% endif %}
+                                        </p>
+                                        {% endif %}
+                                        
+                                        <!-- Task Details -->
+                                        <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                            <tr>
+                                                <td style="padding: 8px 0; border-top: 1px solid #30363d;">
+                                                    <span style="color: #8b949e; font-size: 13px;">📁 Project:</span>
+                                                    <span style="color: #c9d1d9; font-size: 13px; float: right;">{{ task.project.name }}</span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; border-top: 1px solid #30363d;">
+                                                    <span style="color: #8b949e; font-size: 13px;">📊 Status:</span>
+                                                    <span style="color: {% if task.status == 'Done' %}#238636{% elif task.status == 'In Progress' %}#1f6feb{% elif task.status == 'Blocked' %}#da3633{% else %}#8b949e{% endif %}; font-size: 13px; float: right; font-weight: 600;">
+                                                        {{ task.status }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 8px 0; border-top: 1px solid #30363d;">
+                                                    <span style="color: #8b949e; font-size: 13px;">🎯 Priority:</span>
+                                                    <span style="color: {% if task.priority == 'High' %}#f85149{% elif task.priority == 'Medium' %}#d29922{% else %}#238636{% endif %}; font-size: 13px; float: right; font-weight: 600;">
+                                                        {{ task.priority }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% if task.due_date %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-top: 1px solid #30363d;">
+                                                    <span style="color: #8b949e; font-size: 13px;">📅 Due Date:</span>
+                                                    <span style="color: {% if task.is_overdue() %}#f85149{% else %}#c9d1d9{% endif %}; font-size: 13px; float: right;">
+                                                        {{ task.due_date.strftime('%b %d, %Y') }}
+                                                        {% if task.is_overdue() %}<span style="color: #f85149;"> (Overdue!)</span>{% endif %}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                            {% if task.estimated_hours %}
+                                            <tr>
+                                                <td style="padding: 8px 0; border-top: 1px solid #30363d;">
+                                                    <span style="color: #8b949e; font-size: 13px;">⏱️ Estimated:</span>
+                                                    <span style="color: #c9d1d9; font-size: 13px; float: right;">{{ task.estimated_hours }} hours</span>
+                                                </td>
+                                            </tr>
+                                            {% endif %}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- CTA Button -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{{ url_for('tasks.view_task', task_id=task.id, _external=True) }}" 
+                                           style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #238636 0%, #2ea043 100%); color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                                            View Task Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #0d1117; border-top: 1px solid #30363d; text-align: center;">
+                            <p style="margin: 0 0 10px; font-size: 13px; color: #8b949e;">
+                                This is an automated notification from EcoGTasks.
+                            </p>
+                            <p style="margin: 0; font-size: 12px; color: #6e7681;">
+                                © {{ now().year if now is defined else 2026 }} EcoGTasks - Task Management System
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

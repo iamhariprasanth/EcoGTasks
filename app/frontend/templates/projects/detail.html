@@ -21,7 +21,7 @@
                     <div>
                         <h2 class="h4 mb-1">{{ project.name }}</h2>
                         <p class="text-muted mb-0">
-                            Created by {{ project.owner.username }} on {{ project.created_at.strftime('%b %d, %Y') }}
+                            Created by {{ project.owner.username }} on {{ project.created_at|ist_datetime('%b %d, %Y %I:%M %p') }} IST
                         </p>
                     </div>
                 </div>
