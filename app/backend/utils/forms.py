@@ -239,6 +239,12 @@ class UpdateProgressForm(FlaskForm):
 
 class EmailConfigForm(FlaskForm):
     """Form to configure email settings."""
+    os_type = SelectField('Operating System', choices=[
+        ('auto', 'Auto Detect'),
+        ('windows', 'Windows'),
+        ('macos', 'macOS'),
+        ('linux', 'Linux')
+    ])
     mail_server = StringField('SMTP Server', validators=[
         DataRequired(message='SMTP server is required'),
         Length(max=255, message='Server must be less than 255 characters')

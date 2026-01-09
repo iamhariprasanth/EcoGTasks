@@ -1,7 +1,9 @@
 """
 Email Utility Functions
 Handles sending emails for password reset and notifications.
+Supports Windows, macOS, and Linux environments.
 """
+import platform
 from threading import Thread
 from flask import current_app, render_template
 from flask_mail import Message
@@ -9,13 +11,32 @@ from flask_mail import Message
 from app import mail
 
 
+def get_os_type():
+    """
+    Get the configured or detected operating system type.
+    Returns: 'windows', 'macos', or 'linux'
+    """
+    os_type = current_app.config.get('OS_TYPE', 'auto')
+    
+    if os_type == 'auto':
+        system = platform.system().lower()
+        if system == 'windows':
+            return 'windows'
+        elif system == 'darwin':
+            return 'macos'
+        else:
+            return 'linux'
+    return os_type
+
+
 def send_async_email(app, msg):
     """Send email asynchronously."""
     with app.app_context():
         try:
             mail.send(msg)
+            app.logger.info(f'Email sent successfully to {msg.recipients} (OS: {get_os_type()})')
         except Exception as e:
-            app.logger.error(f'Failed to send email: {str(e)}')
+            app.logger.error(f'Failed to send email to {msg.recipients}: {str(e)}')
 
 
 def send_email(subject, recipients, text_body, html_body=None):
@@ -28,16 +49,30 @@ def send_email(subject, recipients, text_body, html_body=None):
         text_body: Plain text email body
         html_body: HTML email body (optional)
     """
-    msg = Message(subject, recipients=recipients)
-    msg.body = text_body
-    if html_body:
-        msg.html = html_body
+    # Check if email is configured
+    if not current_app.config.get('MAIL_USERNAME') or not current_app.config.get('MAIL_PASSWORD'):
+        current_app.logger.warning(f'Email not configured. Skipping email to {recipients}')
+        return False
     
-    # Send email asynchronously to not block the request
-    Thread(
-        target=send_async_email,
-        args=(current_app._get_current_object(), msg)
-    ).start()
+    try:
+        os_type = get_os_type()
+        current_app.logger.info(f'Sending email using OS configuration: {os_type}')
+        
+        sender = current_app.config.get('MAIL_DEFAULT_SENDER') or current_app.config.get('MAIL_USERNAME')
+        msg = Message(subject, sender=sender, recipients=recipients)
+        msg.body = text_body
+        if html_body:
+            msg.html = html_body
+        
+        # Send email asynchronously to not block the request
+        Thread(
+            target=send_async_email,
+            args=(current_app._get_current_object(), msg)
+        ).start()
+        return True
+    except Exception as e:
+        current_app.logger.error(f'Error creating email message: {str(e)}')
+        return False
 
 
 def send_password_reset_email(user):

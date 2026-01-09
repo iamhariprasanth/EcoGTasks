@@ -31,6 +31,9 @@ class Config:
     TIMEZONE_OFFSET_HOURS = 5
     TIMEZONE_OFFSET_MINUTES = 30
     
+    # Operating System type (auto, windows, macos, linux)
+    OS_TYPE = os.environ.get('OS_TYPE', 'auto')
+    
     # Secret key for session management and CSRF protection
     # In production, use environment variable: os.environ.get('SECRET_KEY')
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-super-secret-key-change-in-production'

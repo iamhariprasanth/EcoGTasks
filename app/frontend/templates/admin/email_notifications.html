@@ -26,6 +26,22 @@
                 <div class="card-body">
                     <table class="table table-sm mb-0">
                         <tr>
+                            <td class="text-muted">Operating System</td>
+                            <td>
+                                {% if email_config.os_type == 'auto' %}
+                                <span class="badge bg-info">Auto Detect</span>
+                                {% elif email_config.os_type == 'windows' %}
+                                <span class="badge bg-primary"><i class="bi bi-windows me-1"></i>Windows</span>
+                                {% elif email_config.os_type == 'macos' %}
+                                <span class="badge bg-secondary"><i class="bi bi-apple me-1"></i>macOS</span>
+                                {% elif email_config.os_type == 'linux' %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-ubuntu me-1"></i>Linux</span>
+                                {% else %}
+                                <span class="badge bg-info">Auto Detect</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
                             <td class="text-muted">SMTP Server</td>
                             <td><code>{{ email_config.server }}</code></td>
                         </tr>
@@ -297,6 +313,12 @@ document.querySelectorAll('.user-checkbox').forEach(cb => {
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
                         Configure your SMTP settings for sending email notifications. For Gmail, use an <a href="https://support.google.com/accounts/answer/185833" target="_blank">App Password</a>.
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="os_type" class="form-label">Operating System</label>
+                        {{ email_form.os_type(class="form-select") }}
+                        <div class="form-text">Select your server's operating system for optimal email configuration.</div>
                     </div>
                     
                     <div class="row">
