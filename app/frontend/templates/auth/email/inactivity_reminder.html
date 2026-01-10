@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Reminder - EcoGTasks</title>
+</head>
+<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f5f5f5;">
+    <div style="background: linear-gradient(135deg, {% if urgency == 'high' %}#dc2626 0%, #991b1b{% elif urgency == 'medium' %}#ea580c 0%, #c2410c{% else %}#d97706 0%, #b45309{% endif %} 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="color: white; margin: 0; font-size: 28px;">
+            {% if urgency == 'high' %}⚠️{% elif urgency == 'medium' %}🔔{% else %}⏰{% endif %}
+            Activity Reminder
+        </h1>
+        <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0 0;">Your account requires attention</p>
+    </div>
+    
+    <div style="background-color: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+        <p style="font-size: 16px;">Hello <strong>{{ user.username }}</strong>,</p>
+        
+        <div style="background-color: {% if urgency == 'high' %}#fef2f2{% elif urgency == 'medium' %}#fff7ed{% else %}#fffbeb{% endif %}; border-left: 4px solid {% if urgency == 'high' %}#dc2626{% elif urgency == 'medium' %}#ea580c{% else %}#d97706{% endif %}; padding: 15px; margin: 20px 0; border-radius: 0 8px 8px 0;">
+            <p style="margin: 0; font-size: 15px;">
+                <strong>Current Status:</strong> 
+                <span style="color: {% if urgency == 'high' %}#dc2626{% elif urgency == 'medium' %}#ea580c{% else %}#d97706{% endif %}; font-weight: bold;">
+                    {{ status_message }}
+                </span>
+            </p>
+            {% if hours_since_login %}
+            <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">
+                You haven't logged in for approximately <strong>{{ hours_since_login|int }} hours</strong> 
+                ({{ (hours_since_login / 24)|round(1) }} days)
+            </p>
+            {% else %}
+            <p style="margin: 10px 0 0 0; font-size: 14px; color: #666;">
+                You have never logged in to the system.
+            </p>
+            {% endif %}
+        </div>
+        
+        <p style="font-size: 15px;">
+            We noticed that your activity on EcoGTasks has been low recently. Regular engagement helps ensure:
+        </p>
+        
+        <ul style="font-size: 14px; color: #555; padding-left: 20px;">
+            <li>Your tasks stay up-to-date</li>
+            <li>Team collaboration remains smooth</li>
+            <li>Project deadlines are met</li>
+            <li>Your contributions are tracked properly</li>
+        </ul>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <a href="{{ url_for('auth.login', _external=True) }}" 
+               style="display: inline-block; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 35px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                🚀 Login Now
+            </a>
+        </div>
+        
+        <p style="font-size: 14px; color: #666;">
+            If you're facing any issues accessing your account or need assistance, please contact your administrator.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
+        
+        <p style="font-size: 12px; color: #888; text-align: center; margin: 0;">
+            This is an automated reminder from EcoGTasks.<br>
+            Please do not reply to this email.
+        </p>
+    </div>
+    
+    <div style="text-align: center; padding: 20px; color: #888; font-size: 12px;">
+        <p style="margin: 0;">&copy; 2026 EcoGTasks. All rights reserved.</p>
+    </div>
+</body>
+</html>

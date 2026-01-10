@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="animate-fade-in">
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1"><i class="bi bi-activity me-2"></i>User Activity</h1>
+            <p class="text-muted mb-0">Monitor user engagement based on logins, interactions, and comments</p>
+        </div>
+        <a href="{{ url_for('admin.users') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-people me-2"></i>Manage Users
+        </a>
+    </div>
+
+    <!-- Activity Summary Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card border-0" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                <div class="card-body text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-white-50 mb-1 small">Active</p>
+                            <h3 class="mb-0 fw-bold">{{ active_count }}</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2">
+                            <i class="bi bi-person-check fs-5"></i>
+                        </div>
+                    </div>
+                    <small class="text-white-50">&lt;24 hours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
+                <div class="card-body text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-white-50 mb-1 small">Temp Inactive</p>
+                            <h3 class="mb-0 fw-bold">{{ temp_inactive_count }}</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2">
+                            <i class="bi bi-clock fs-5"></i>
+                        </div>
+                    </div>
+                    <small class="text-white-50">24-100 hours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
+                <div class="card-body text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-white-50 mb-1 small">Inactive</p>
+                            <h3 class="mb-0 fw-bold">{{ inactive_count }}</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2">
+                            <i class="bi bi-person-x fs-5"></i>
+                        </div>
+                    </div>
+                    <small class="text-white-50">100-150 hours</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card border-0" style="background: linear-gradient(135deg, #374151 0%, #1f2937 100%);">
+                <div class="card-body text-white py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <p class="text-white-50 mb-1 small">Not Working</p>
+                            <h3 class="mb-0 fw-bold">{{ not_working_count }}</h3>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-2">
+                            <i class="bi bi-calendar-x fs-5"></i>
+                        </div>
+                    </div>
+                    <small class="text-white-50">&gt;150 hours</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('admin.user_activity') }}" class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label for="activity" class="form-label"><i class="bi bi-funnel me-1"></i>Activity Status</label>
+                    <select class="form-select" id="activity" name="activity">
+                        <option value="all" {% if activity_filter == 'all' %}selected{% endif %}>All Users</option>
+                        <option value="active" {% if activity_filter == 'active' %}selected{% endif %}>Active (&lt;24h)</option>
+                        <option value="temp_inactive" {% if activity_filter == 'temp_inactive' %}selected{% endif %}>Temporarily Inactive (24-100h)</option>
+                        <option value="inactive" {% if activity_filter == 'inactive' %}selected{% endif %}>Inactive (100-150h)</option>
+                        <option value="not_working" {% if activity_filter == 'not_working' %}selected{% endif %}>Not Working This Week (&gt;150h)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="days" class="form-label"><i class="bi bi-calendar me-1"></i>Time Period</label>
+                    <select class="form-select" id="days" name="days">
+                        <option value="7" {% if days_filter == 7 %}selected{% endif %}>Last 7 days</option>
+                        <option value="14" {% if days_filter == 14 %}selected{% endif %}>Last 14 days</option>
+                        <option value="30" {% if days_filter == 30 %}selected{% endif %}>Last 30 days</option>
+                        <option value="60" {% if days_filter == 60 %}selected{% endif %}>Last 60 days</option>
+                        <option value="90" {% if days_filter == 90 %}selected{% endif %}>Last 90 days</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="search" class="form-label"><i class="bi bi-search me-1"></i>Search User</label>
+                    <input type="text" class="form-control" id="search" name="search" 
+                           placeholder="Username or email..." value="{{ search }}">
+                </div>
+                <div class="col-md-2">
+                    <div class="btn-group w-100" role="group">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-funnel me-1"></i>Filter
+                        </button>
+                        <a href="{{ url_for('admin.user_activity') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-x-circle"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- User Activity Table -->
+    <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-table me-2"></i>User Activity Details</h5>
+            <span class="badge bg-info">{{ user_activity|length }} users shown</span>
+        </div>
+        <div class="card-body p-0">
+            {% if user_activity %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th class="text-center">Last Login</th>
+                            <th class="text-center">
+                                <i class="bi bi-chat-dots" title="Comments"></i> Comments
+                            </th>
+                            <th class="text-center">
+                                <i class="bi bi-plus-circle" title="Tasks Created"></i> Created
+                            </th>
+                            <th class="text-center">
+                                <i class="bi bi-pencil-square" title="Tasks Updated"></i> Updated
+                            </th>
+                            <th class="text-center">
+                                <i class="bi bi-clock-history" title="History Entries"></i> History
+                            </th>
+                            <th class="text-center">Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in user_activity %}
+                        <tr class="{% if item.activity_status == 'not_working' %}table-dark bg-opacity-25{% elif item.activity_status == 'inactive' %}table-danger bg-opacity-10{% elif item.activity_status == 'temp_inactive' %}table-warning bg-opacity-10{% endif %}">
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-sm {% if item.activity_status == 'active' %}bg-success{% elif item.activity_status == 'temp_inactive' %}bg-warning{% elif item.activity_status == 'inactive' %}bg-danger{% else %}bg-dark{% endif %} rounded-circle d-flex align-items-center justify-content-center me-2">
+                                        <span class="text-white small">{{ item.user.username[0].upper() }}</span>
+                                    </div>
+                                    <div>
+                                        <a href="{{ url_for('admin.view_user', user_id=item.user.id) }}" class="text-decoration-none fw-medium">
+                                            {{ item.user.username }}
+                                        </a>
+                                        <br>
+                                        <small class="text-muted">{{ item.user.email }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-{{ 'danger' if item.user.role == 'admin' else 'warning' if item.user.role == 'manager' else 'info' }}">
+                                    {{ item.user.role|capitalize }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if item.activity_status == 'active' %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Active</span>
+                                {% elif item.activity_status == 'temp_inactive' %}
+                                <span class="badge bg-warning text-dark"><i class="bi bi-clock me-1"></i>Temp Inactive</span>
+                                {% elif item.activity_status == 'inactive' %}
+                                <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Inactive</span>
+                                {% else %}
+                                <span class="badge bg-dark"><i class="bi bi-calendar-x me-1"></i>Not Working</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.last_login %}
+                                <span title="{{ item.last_login.strftime('%Y-%m-%d %H:%M:%S') }}">
+                                    {{ item.last_login.strftime('%b %d, %Y') }}
+                                    {% if item.days_since_login is not none %}
+                                    <br>
+                                    <small class="text-muted">
+                                        {% if item.days_since_login == 0 %}
+                                        Today
+                                        {% elif item.days_since_login == 1 %}
+                                        Yesterday
+                                        {% else %}
+                                        {{ item.days_since_login }} days ago
+                                        {% endif %}
+                                    </small>
+                                    {% endif %}
+                                </span>
+                                {% else %}
+                                <span class="text-muted">Never</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.comments_count > 0 %}
+                                <span class="badge bg-primary">{{ item.comments_count }}</span>
+                                {% else %}
+                                <span class="text-muted">0</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.tasks_created > 0 %}
+                                <span class="badge bg-success">{{ item.tasks_created }}</span>
+                                {% else %}
+                                <span class="text-muted">0</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.tasks_updated > 0 %}
+                                <span class="badge bg-info">{{ item.tasks_updated }}</span>
+                                {% else %}
+                                <span class="text-muted">0</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.history_count > 0 %}
+                                <span class="badge bg-secondary">{{ item.history_count }}</span>
+                                {% else %}
+                                <span class="text-muted">0</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-center">
+                                {% if item.total_interactions > 0 %}
+                                <span class="badge bg-dark fs-6">{{ item.total_interactions }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">0</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ url_for('admin.view_user', user_id=item.user.id) }}" 
+                                       class="btn btn-outline-primary" title="View Details">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    {% if item.activity_status != 'active' and item.user.id != current_user.id %}
+                                    <form method="POST" action="{{ url_for('admin.send_inactivity_reminder', user_id=item.user.id) }}" class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="hidden" name="activity_status" value="{{ item.activity_status }}">
+                                        <input type="hidden" name="hours_since_login" value="{{ item.hours_since_login or 0 }}">
+                                        <button type="submit" class="btn btn-outline-warning" title="Send Inactivity Reminder Email" 
+                                                onclick="return confirm('Send inactivity reminder email to {{ item.user.username }}?');">
+                                            <i class="bi bi-bell"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-inbox fs-1 text-muted"></i>
+                <p class="text-muted mt-2">No users found matching the criteria</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Activity Legend -->
+    <div class="card mt-4">
+        <div class="card-body">
+            <h6 class="mb-3"><i class="bi bi-info-circle me-2"></i>Activity Metrics Legend</h6>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-chat-dots text-primary me-2"></i>
+                        <span><strong>Comments</strong> - Comments posted on tasks</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-plus-circle text-success me-2"></i>
+                        <span><strong>Created</strong> - New tasks created</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-pencil-square text-info me-2"></i>
+                        <span><strong>Updated</strong> - Assigned tasks worked on</span>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="bi bi-clock-history text-secondary me-2"></i>
+                        <span><strong>History</strong> - Task changes made</span>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <small class="text-muted">
+                <i class="bi bi-lightbulb me-1"></i>
+                A user is considered <strong>Active</strong> if they have logged in or performed any interactions within the selected time period.
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+ACTIVITY REMINDER - EcoGTasks
+==============================
+
+Hello {{ user.username }},
+
+Your account requires attention.
+
+CURRENT STATUS: {{ status_message }}
+{% if hours_since_login %}
+You haven't logged in for approximately {{ hours_since_login|int }} hours ({{ (hours_since_login / 24)|round(1) }} days).
+{% else %}
+You have never logged in to the system.
+{% endif %}
+
+We noticed that your activity on EcoGTasks has been low recently. Regular engagement helps ensure:
+
+* Your tasks stay up-to-date
+* Team collaboration remains smooth
+* Project deadlines are met
+* Your contributions are tracked properly
+
+Please login to your account at your earliest convenience:
+{{ url_for('auth.login', _external=True) }}
+
+If you're facing any issues accessing your account or need assistance, please contact your administrator.
+
+---
+This is an automated reminder from EcoGTasks.
+Please do not reply to this email.
+
+© 2026 EcoGTasks. All rights reserved.

@@ -7,10 +7,11 @@ from datetime import timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, current_app
 from flask_login import login_required, current_user
 
+from datetime import datetime
 from app import db
-from app.backend.models import User, Task, Project, UserRole, TaskStatus, get_ist_now, get_ist_date
+from app.backend.models import User, Task, Project, UserRole, TaskStatus, Comment, TaskHistory, get_ist_now, get_ist_date
 from app.backend.utils.decorators import admin_required
-from app.backend.utils.email import send_approval_email, send_rejection_email, send_weekly_task_status_email
+from app.backend.utils.email import send_approval_email, send_rejection_email, send_weekly_task_status_email, send_inactivity_reminder_email
 from app.backend.utils.forms import EmailConfigForm
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
@@ -115,6 +116,151 @@ def reject_user(user_id):
     return redirect(url_for('admin.pending_users'))
 
 
+@admin_bp.route('/user-activity')
+@login_required
+@admin_required
+def user_activity():
+    """
+    User activity monitoring page.
+    Shows active/inactive users based on login, interactions, and comments.
+    """
+    # Get filter parameters
+    activity_filter = request.args.get('activity', 'all')  # all, active, inactive
+    days_filter = request.args.get('days', 30, type=int)
+    search = request.args.get('search', '')
+    
+    today = get_ist_date()
+    cutoff_date = datetime.combine(today - timedelta(days=days_filter), datetime.min.time())
+    
+    # Get all approved users
+    query = User.query.filter_by(is_approved=True)
+    
+    if search:
+        query = query.filter(
+            (User.username.ilike(f'%{search}%')) |
+            (User.email.ilike(f'%{search}%'))
+        )
+    
+    users = query.all()
+    
+    # Build user activity data
+    user_activity_data = []
+    active_count = 0
+    temp_inactive_count = 0
+    inactive_count = 0
+    not_working_count = 0
+    
+    for user in users:
+        # Get last login
+        last_login = user.last_login
+        
+        # Count comments in period
+        comments_count = Comment.query.filter(
+            Comment.user_id == user.id,
+            Comment.created_at >= cutoff_date
+        ).count()
+        
+        # Count task interactions (created or updated tasks)
+        tasks_created = Task.query.filter(
+            Task.created_by == user.id,
+            Task.created_at >= cutoff_date
+        ).count()
+        
+        tasks_updated = Task.query.filter(
+            Task.assigned_to == user.id,
+            Task.updated_at >= cutoff_date
+        ).count()
+        
+        # Count task history entries (status changes, updates)
+        history_count = TaskHistory.query.filter(
+            TaskHistory.user_id == user.id,
+            TaskHistory.created_at >= cutoff_date
+        ).count()
+        
+        # Total interactions
+        total_interactions = comments_count + tasks_created + tasks_updated + history_count
+        
+        # Calculate hours since last login
+        hours_since_login = None
+        if last_login:
+            time_diff = datetime.now() - last_login
+            hours_since_login = time_diff.total_seconds() / 3600  # Convert to hours
+        
+        # Determine activity status based on hours since last login
+        # < 24 hours: Active
+        # 24-100 hours: Temporarily Inactive
+        # 100-150 hours: Inactive
+        # > 150 hours: Not Working This Week
+        if hours_since_login is None:
+            activity_status = 'not_working'  # Never logged in
+        elif hours_since_login < 24:
+            activity_status = 'active'
+        elif hours_since_login < 100:
+            activity_status = 'temp_inactive'
+        elif hours_since_login < 150:
+            activity_status = 'inactive'
+        else:
+            activity_status = 'not_working'
+        
+        # Count for summary cards
+        if activity_status == 'active':
+            active_count += 1
+        elif activity_status == 'temp_inactive':
+            temp_inactive_count += 1
+        elif activity_status == 'inactive':
+            inactive_count += 1
+        else:
+            not_working_count += 1
+        
+        # Apply activity filter
+        if activity_filter == 'active' and activity_status != 'active':
+            continue
+        elif activity_filter == 'inactive' and activity_status == 'active':
+            continue
+        elif activity_filter == 'temp_inactive' and activity_status != 'temp_inactive':
+            continue
+        elif activity_filter == 'not_working' and activity_status != 'not_working':
+            continue
+        
+        # Calculate days since last login for display
+        days_since_login = None
+        if last_login:
+            days_since_login = (datetime.now() - last_login).days
+        
+        user_activity_data.append({
+            'user': user,
+            'last_login': last_login,
+            'hours_since_login': hours_since_login,
+            'days_since_login': days_since_login,
+            'comments_count': comments_count,
+            'tasks_created': tasks_created,
+            'tasks_updated': tasks_updated,
+            'history_count': history_count,
+            'total_interactions': total_interactions,
+            'activity_status': activity_status,
+            'is_active': activity_status == 'active'
+        })
+    
+    # Sort by activity status (most inactive first)
+    status_order = {'not_working': 0, 'inactive': 1, 'temp_inactive': 2, 'active': 3}
+    user_activity_data.sort(key=lambda x: (status_order.get(x['activity_status'], 0), x['last_login'] or datetime.min))
+    
+    return render_template(
+        'admin/user_activity.html',
+        title='User Activity',
+        user_activity=user_activity_data,
+        activity_filter=activity_filter,
+        days_filter=days_filter,
+        search=search,
+        active_count=active_count,
+        temp_inactive_count=temp_inactive_count,
+        inactive_count=inactive_count,
+        not_working_count=not_working_count,
+        total_users=len(users),
+        today=today
+    )
+
+
 @admin_bp.route('/users')
 @login_required
 @admin_required
@@ -203,6 +349,39 @@ def toggle_user_status(user_id):
     return redirect(url_for('admin.users'))
 
 
+@admin_bp.route('/users/<int:user_id>/send-inactivity-reminder', methods=['POST'])
+@login_required
+@admin_required
+def send_inactivity_reminder(user_id):
+    """
+    Send inactivity reminder email to a user.
+    """
+    user = User.query.get_or_404(user_id)
+    
+    # Get activity status from form
+    activity_status = request.form.get('activity_status', 'inactive')
+    hours_since_login = request.form.get('hours_since_login', type=float)
+    
+    # Don't send to yourself
+    if user.id == current_user.id:
+        flash('You cannot send a reminder to yourself.', 'danger')
+        return redirect(url_for('admin.user_activity'))
+    
+    # Check if email is configured
+    if not current_app.config.get('MAIL_USERNAME') or not current_app.config.get('MAIL_PASSWORD'):
+        flash(f'Email not configured. Cannot send reminder to {user.username}.', 'danger')
+        return redirect(url_for('admin.user_activity'))
+    
+    try:
+        send_inactivity_reminder_email(user, activity_status, hours_since_login)
+        flash(f'Inactivity reminder sent to {user.username} ({user.email}).', 'success')
+    except Exception as e:
+        current_app.logger.error(f'Failed to send inactivity reminder: {str(e)}')
+        flash(f'Failed to send reminder to {user.username}: {str(e)}', 'danger')
+    
+    return redirect(url_for('admin.user_activity'))
+
+
 @admin_bp.route('/users/<int:user_id>/change-role', methods=['POST'])
 @login_required
 @admin_required
@@ -237,7 +416,7 @@ def change_user_role(user_id):
 def delete_user(user_id):
     """
     Delete a user account.
-    Warning: This will also affect related tasks and comments.
+    Warning: This will also affect related tasks, projects, and comments.
     """
     user = User.query.get_or_404(user_id)
     
@@ -248,14 +427,30 @@ def delete_user(user_id):
     
     username = user.username
     
-    # Reassign or handle tasks before deletion
-    # For now, we'll just unassign tasks
+    # Handle all related data before deletion
+    
+    # 1. Unassign tasks assigned to this user
     Task.query.filter_by(assigned_to=user.id).update({'assigned_to': None})
+    
+    # 2. Transfer tasks created by this user to current admin
+    Task.query.filter_by(created_by=user.id).update({'created_by': current_user.id})
+    
+    # 3. Transfer projects created by this user to current admin
+    Project.query.filter_by(created_by=user.id).update({'created_by': current_user.id})
+    
+    # 4. Delete comments by this user
+    Comment.query.filter_by(user_id=user.id).delete()
+    
+    # 5. Delete task history entries by this user
+    TaskHistory.query.filter_by(user_id=user.id).delete()
+    
+    # 6. Remove user from project members (many-to-many)
+    user.projects = []
     
     db.session.delete(user)
     db.session.commit()
     
-    flash(f'User {username} has been deleted. Their assigned tasks have been unassigned.', 'success')
+    flash(f'User {username} has been deleted. Their projects and created tasks have been transferred to you.', 'success')
     
     return redirect(url_for('admin.users'))
 

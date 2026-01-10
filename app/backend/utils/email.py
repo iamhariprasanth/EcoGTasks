@@ -199,3 +199,39 @@ def send_task_assigned_email(task, assigner, old_assignee=None):
             text_body=render_template('auth/email/task_unassigned.txt', task=task, assigner=assigner, new_assignee=task.assignee),
             html_body=render_template('auth/email/task_unassigned.html', task=task, assigner=assigner, new_assignee=task.assignee)
         )
+
+
+def send_inactivity_reminder_email(user, activity_status, hours_since_login):
+    """
+    Send inactivity reminder email to user.
+    
+    Args:
+        user: User object to send reminder to
+        activity_status: Current activity status ('temp_inactive', 'inactive', 'not_working')
+        hours_since_login: Number of hours since last login
+    """
+    # Determine status message
+    if activity_status == 'temp_inactive':
+        status_message = 'Temporarily Inactive'
+        urgency = 'low'
+    elif activity_status == 'inactive':
+        status_message = 'Inactive'
+        urgency = 'medium'
+    else:
+        status_message = 'Not Working This Week'
+        urgency = 'high'
+    
+    send_email(
+        subject=f'[EcoGTasks] Activity Reminder - Your Status: {status_message}',
+        recipients=[user.email],
+        text_body=render_template('auth/email/inactivity_reminder.txt', 
+                                  user=user, 
+                                  status_message=status_message,
+                                  hours_since_login=hours_since_login,
+                                  urgency=urgency),
+        html_body=render_template('auth/email/inactivity_reminder.html', 
+                                  user=user, 
+                                  status_message=status_message,
+                                  hours_since_login=hours_since_login,
+                                  urgency=urgency)
+    )
