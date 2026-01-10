@@ -1,26 +1,26 @@
 /* EcoGTasks - Custom Styles */
-/* Modern dark theme with sleek aesthetics */
+/* Modern Ocean theme with sleek aesthetics */
 
 :root {
     /* Color Palette */
-    --primary-color: #6366f1;
-    --primary-hover: #4f46e5;
-    --secondary-color: #8b5cf6;
+    --primary-color: #016064;
+    --primary-hover: #014d50;
+    --secondary-color: #028a8f;
     --success-color: #10b981;
     --warning-color: #f59e0b;
     --danger-color: #ef4444;
     --info-color: #3b82f6;
     
-    /* Dark Theme Colors */
-    --bg-dark: #0f172a;
-    --bg-card: #1e293b;
-    --bg-hover: #334155;
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --border-color: #334155;
+    /* Ocean Theme Colors */
+    --bg-dark: #016064;
+    --bg-card: rgba(255, 255, 255, 0.95);
+    --bg-hover: rgba(255, 255, 255, 0.98);
+    --text-primary: #1a1a2e;
+    --text-secondary: #555;
+    --border-color: rgba(0, 0, 0, 0.1);
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    --gradient-primary: linear-gradient(135deg, #016064 0%, #028a8f 100%);
     --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
     --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
     --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
@@ -55,27 +55,31 @@ body {
 
 /* Card Styles */
 .card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-color);
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
     border-radius: 12px;
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
-    background-color: transparent;
-    border-bottom: 1px solid var(--border-color);
+    background-color: #ffffff;
+    border-bottom: 1px solid #e8e8e8;
     padding: 1rem 1.25rem;
 }
 
+.card-body {
+    background-color: #ffffff;
+}
+
 .card-glass {
-    background: rgba(30, 41, 59, 0.8);
+    background: #ffffff;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 /* Stat Cards */
@@ -115,7 +119,7 @@ body {
 }
 
 .stat-card .stat-label {
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.7);
     font-size: 0.875rem;
 }
 
@@ -180,18 +184,18 @@ body {
 
 /* Form Styles */
 .form-control, .form-select {
-    background-color: var(--bg-card);
-    border-color: var(--border-color);
+    background-color: #ffffff;
+    border-color: #d0d0d0;
     color: var(--text-primary);
     border-radius: 8px;
     padding: 0.75rem 1rem;
 }
 
 .form-control:focus, .form-select:focus {
-    background-color: var(--bg-card);
+    background-color: #ffffff;
     border-color: var(--primary-color);
     color: var(--text-primary);
-    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+    box-shadow: 0 0 0 3px rgba(1, 96, 100, 0.15);
 }
 
 .form-label {
@@ -212,7 +216,7 @@ body {
 
 .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+    box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
 }
 
 .btn-outline-primary {
@@ -328,8 +332,10 @@ body {
 .comment-item {
     padding: 1rem;
     border-radius: 8px;
-    background: var(--bg-dark);
+    background: #ffffff;
     margin-bottom: 0.75rem;
+    color: #1a1a2e;
+    border: 1px solid #f0f0f0;
 }
 
 /* Timeline / History */
@@ -384,6 +390,183 @@ body {
     animation: fadeIn 0.3s ease-out;
 }
 
+/* Pear Green Theme - Navbar Styles */
+.navbar .nav-link {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link.active {
+    color: #fff !important;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+}
+
+.navbar .navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.navbar .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 0.9%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+}
+
+.navbar .dropdown-menu {
+    background-color: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.navbar .dropdown-item {
+    color: #1a1a2e;
+}
+
+.navbar .dropdown-item:hover {
+    background-color: rgba(1, 96, 100, 0.1);
+    color: #016064;
+}
+
+/* Card text colors for light background */
+.card {
+    color: #1a1a2e;
+}
+
+.card h1, .card h2, .card h3, .card h4, .card h5, .card h6 {
+    color: #1a1a2e;
+}
+
+.card .text-muted {
+    color: #666 !important;
+}
+
+/* Table styles for light theme */
+.table {
+    color: #1a1a2e;
+}
+
+.table thead th {
+    color: #333 !important;
+}
+
+.table tbody td {
+    color: #1a1a2e;
+}
+
+.table tbody td a {
+    color: #016064;
+}
+
+.table-dark {
+    background-color: rgba(255, 255, 255, 0.95);
+    color: #1a1a2e;
+}
+
+.table-dark th {
+    background-color: rgba(1, 96, 100, 0.1);
+    color: #1a1a2e;
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.table-dark td {
+    background-color: #fff;
+    border-color: rgba(0, 0, 0, 0.05);
+    color: #1a1a2e;
+}
+
+/* Page Headers */
+.h3, h3, .h4, h4, h1, h2, h5, h6 {
+    color: #fff;
+}
+
+.card .h3, .card h3, .card .h4, .card h4, .card h1, .card h2, .card h5, .card h6 {
+    color: #1a1a2e;
+}
+
+/* Alert text */
+.alert {
+    color: inherit;
+}
+
+.alert-warning {
+    background-color: #fef3cd;
+    border-color: #ffc107;
+    color: #856404;
+}
+
+.alert-info {
+    background-color: #cff4fc;
+    border-color: #9eeaf9;
+    color: #055160;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-color: #f5c2c7;
+    color: #842029;
+}
+
+.alert-success {
+    background-color: #d1e7dd;
+    border-color: #badbcc;
+    color: #0f5132;
+}
+
+/* Form labels on dark background */
+body > .container .form-label,
+.main-content > .container .form-label {
+    color: #fff;
+}
+
+.card .form-label {
+    color: #555;
+}
+
+/* Breadcrumb */
+.breadcrumb-item a {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.breadcrumb-item.active {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.card .breadcrumb-item a {
+    color: #016064;
+}
+
+.card .breadcrumb-item.active {
+    color: #666;
+}
+
+/* Text muted on dark background */
+.main-content > .container > .text-muted,
+.main-content > .container > div > .text-muted,
+.main-content > .container > div > div > p.text-muted {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Link colors */
+a {
+    color: #016064;
+}
+
+a:hover {
+    color: #014d50;
+}
+
+.card a:not(.btn) {
+    color: #016064;
+}
+
+/* Task list table links */
+.table a.fw-medium {
+    color: #016064 !important;
+}
+
+/* Timeline text */
+.timeline-item {
+    color: #1a1a2e;
+}
+
 /* Responsive Adjustments */
 @media (max-width: 768px) {
     .main-content {
@@ -402,14 +585,364 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: var(--bg-dark);
+    background: rgba(255, 255, 255, 0.3);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: var(--bg-hover);
+    background: rgba(1, 96, 100, 0.5);
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: var(--border-color);
+    background: rgba(1, 96, 100, 0.7);
 }
+
+/* Comment Attachments */
+.comment-attachments {
+    background-color: rgba(0, 0, 0, 0.02);
+    padding: 0.75rem;
+    border-radius: 8px;
+}
+
+.attachment-preview {
+    position: relative;
+    display: inline-block;
+}
+
+.attachment-image {
+    width: 120px;
+    height: 90px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s;
+}
+
+.attachment-image:hover {
+    transform: scale(1.05);
+}
+
+.attachment-delete {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.attachment-preview:hover .attachment-delete {
+    opacity: 1;
+}
+
+.attachment-file {
+    background-color: #fff;
+    min-width: 200px;
+    max-width: 280px;
+}
+
+.attachment-file:hover {
+    background-color: rgba(1, 96, 100, 0.05);
+}
+
+.selected-files {
+    background-color: rgba(1, 96, 100, 0.05);
+    border-radius: 8px;
+    padding: 0.5rem;
+}
+
+.selected-file-item {
+    background-color: #fff !important;
+}
+
+.attachment-section label {
+    cursor: pointer;
+}
+
+.attachment-section label:hover {
+    background-color: rgba(1, 96, 100, 0.1);
+}
+
+/* Drag and drop styling */
+.drag-over {
+    background-color: rgba(1, 96, 100, 0.1) !important;
+    border: 2px dashed var(--primary-color) !important;
+}
+
+/* Fix dropdown menu on light background */
+.dropdown-menu {
+    background-color: #fff;
+    color: #1a1a2e;
+}
+
+.dropdown-item {
+    color: #1a1a2e;
+}
+
+.dropdown-item:hover, .dropdown-item:focus {
+    background-color: rgba(1, 96, 100, 0.1);
+    color: #016064;
+}
+
+.dropdown-menu-dark {
+    background-color: #fff !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+.dropdown-menu-dark .dropdown-item {
+    color: #1a1a2e;
+}
+
+.dropdown-menu-dark .dropdown-item:hover,
+.dropdown-menu-dark .dropdown-item:focus {
+    background-color: rgba(1, 96, 100, 0.1);
+    color: #016064;
+}
+
+.dropdown-divider {
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* List group items */
+.list-group-item {
+    color: #1a1a2e;
+    background-color: #ffffff;
+    border-color: #e8e8e8;
+}
+
+.list-group-item.bg-transparent {
+    color: #1a1a2e;
+    background-color: transparent;
+}
+
+.list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Pagination text */
+.pagination .page-item .page-link {
+    color: #1a1a2e;
+}
+
+.pagination .page-item.active .page-link {
+    color: #fff;
+}
+
+.pagination .page-item.disabled .page-link {
+    color: #999;
+}
+
+/* Input group text */
+.input-group-text {
+    background-color: #f8f9fa;
+    color: #333;
+    border-color: var(--border-color);
+}
+
+/* Badge text fixes */
+.badge.bg-secondary {
+    color: #fff !important;
+}
+
+.badge.bg-success {
+    color: #fff !important;
+}
+
+.badge.bg-danger {
+    color: #fff !important;
+}
+
+.badge.bg-warning {
+    color: #212529 !important;
+}
+
+.badge.bg-info {
+    color: #fff !important;
+}
+
+.badge.bg-primary {
+    color: #fff !important;
+}
+
+/* Progress text color fix */
+.progress-bar {
+    color: #fff;
+}
+
+/* Modal styles */
+.modal-content {
+    background-color: #ffffff;
+    color: #1a1a2e;
+    border: none;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+    background-color: #ffffff;
+    border-bottom-color: #e8e8e8;
+}
+
+.modal-body {
+    background-color: #ffffff;
+}
+
+.modal-footer {
+    background-color: #ffffff;
+    border-top-color: #e8e8e8;
+}
+
+/* Card footer */
+.card-footer {
+    background-color: #ffffff;
+    color: #555;
+    border-top: 1px solid #e8e8e8;
+}
+
+/* Empty state text */
+.empty-state {
+    color: #666;
+}
+
+/* Small text on cards */
+.card small,
+.card .small {
+    color: #666;
+}
+
+/* Button outline styles for visibility */
+.btn-outline-secondary {
+    color: #6c757d;
+    border-color: #6c757d;
+}
+
+.btn-outline-secondary:hover {
+    color: #fff;
+    background-color: #6c757d;
+}
+
+/* Task table specific styles */
+.table tbody td span.small {
+    color: #666;
+}
+
+/* Task list table - ensure visible text */
+.table tbody td a.fw-medium {
+    color: #1a1a2e !important;
+    font-weight: 600 !important;
+}
+
+.table tbody td a.fw-medium:hover {
+    color: #016064 !important;
+}
+
+.table tbody td a.text-muted {
+    color: #555 !important;
+}
+
+.table tbody td .text-muted {
+    color: #666 !important;
+}
+
+.table tbody td small.text-muted {
+    color: #777 !important;
+}
+
+/* Table row background */
+.table tbody tr {
+    background-color: #ffffff !important;
+    color: #333 !important;
+}
+
+.table tbody tr:hover {
+    background-color: #f0f8f8 !important;
+}
+
+.table tbody tr:nth-child(even) {
+    background-color: #fafafa !important;
+}
+
+.table tbody td {
+    background-color: transparent !important;
+    color: #333 !important;
+    border-bottom: 1px solid #e8e8e8;
+}
+
+/* Ensure table header is visible */
+.table thead th {
+    background-color: #f5f5f5 !important;
+    color: #333 !important;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    border-bottom: 2px solid #ddd !important;
+}
+
+/* Table container */
+.table {
+    background-color: #ffffff !important;
+    color: #333 !important;
+}
+
+.table-responsive {
+    background-color: #ffffff !important;
+}
+
+/* Card body with table */
+.card .card-body.p-0 {
+    background-color: #ffffff !important;
+}
+
+/* Task links in table */
+.table tbody td a {
+    color: #016064 !important;
+    font-weight: 500;
+}
+
+.table tbody td a:hover {
+    color: #014d50 !important;
+    text-decoration: underline !important;
+}
+
+/* Table text colors */
+.table tbody td small,
+.table tbody td .text-muted {
+    color: #666 !important;
+}
+
+.table tbody td .text-truncate {
+    color: #666 !important;
+}
+
+/* Override any dark theme on tables */
+.table-dark,
+.table-dark tbody tr,
+.table-dark tbody td,
+.table-dark thead th {
+    background-color: #ffffff !important;
+    color: #333 !important;
+}
+
+/* Task card in table */
+.table .task-card {
+    background-color: #ffffff !important;
+}
+
+.table .task-card td {
+    background-color: #ffffff !important;
+}
+
+/* Time log list */
+.time-logs-list .border-bottom {
+    color: #1a1a2e;
+}
+
+.time-logs-list strong {
+    color: #1a1a2e;
+}
+

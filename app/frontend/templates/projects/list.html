@@ -30,18 +30,17 @@
                             <div>
                                 <h5 class="mb-0">
                                     <a href="{{ url_for('projects.view_project', project_id=item.project.id) }}"
-                                        class="text-decoration-none text-white">
+                                        class="text-decoration-none" style="color: #016064;">
                                         {{ item.project.name }}
                                     </a>
                                 </h5>
-                                <small class="text-muted">{{ item.member_count }} members</small>
+                                <small style="color: #555;">{{ item.member_count }} members</small>
                             </div>
                         </div>
                     </div>
 
                     {% if item.project.description %}
-                    <p class="text-muted small mb-3"
-                        style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    <p class="small mb-3" style="color: #333; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                         {{ item.project.description }}
                     </p>
                     {% endif %}
@@ -49,12 +48,12 @@
                     <!-- Progress -->
                     <div class="mb-3">
                         {% set progress = ((item.done_tasks / item.total_tasks) * 100) if item.total_tasks > 0 else 0 %}
-                        <div class="d-flex justify-content-between small mb-1">
+                        <div class="d-flex justify-content-between small mb-1" style="color: #333;">
                             <span>Progress</span>
                             <span>{{ item.done_tasks }}/{{ item.total_tasks }} tasks</span>
                         </div>
                         <div class="progress" style="height: 6px;">
-                            <div class="progress-bar" style="width: {{ progress }}%;"></div>
+                            <div class="progress-bar" style="width: {{ progress }}%; background-color: #016064;"></div>
                         </div>
                     </div>
 
@@ -65,7 +64,7 @@
                     </div>
                 </div>
                 <div class="card-footer border-top d-flex justify-content-between">
-                    <small class="text-muted">
+                    <small style="color: #555;">
                         Created {{ item.project.created_at|ist_datetime('%b %d, %Y %I:%M %p') }} IST
                     </small>
                     <a href="{{ url_for('projects.view_project', project_id=item.project.id) }}"

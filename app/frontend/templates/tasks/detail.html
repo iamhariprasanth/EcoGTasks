@@ -209,7 +209,7 @@
                 </div>
                 <div class="card-body">
                     <!-- Add Comment Form -->
-                    <form method="POST" action="{{ url_for('tasks.add_comment', task_id=task.id) }}" class="mb-4">
+                    <form method="POST" action="{{ url_for('tasks.add_comment', task_id=task.id) }}" class="mb-4" enctype="multipart/form-data">
                         {{ comment_form.hidden_tag() }}
                         <div class="d-flex gap-3">
                             <div
@@ -222,6 +222,22 @@
                                 {% for error in comment_form.content.errors %}
                                 <div class="invalid-feedback">{{ error }}</div>
                                 {% endfor %}
+                                
+                                <!-- File Attachments -->
+                                <div class="attachment-section mt-2">
+                                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                                        <label class="btn btn-outline-secondary btn-sm mb-0" for="attachments">
+                                            <i class="bi bi-paperclip me-1"></i>Attach Files
+                                        </label>
+                                        <input type="file" id="attachments" name="attachments" multiple 
+                                               class="d-none" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv,.zip,.rar"
+                                               onchange="updateFileList(this)">
+                                        <small class="text-muted">Max 16MB per file. Images, PDF, DOC, XLS, TXT, CSV, ZIP</small>
+                                    </div>
+                                    <!-- Selected Files Preview -->
+                                    <div id="selectedFiles" class="selected-files mt-2"></div>
+                                </div>
+                                
                                 <button type="submit" class="btn btn-primary btn-sm mt-2">
                                     <i class="bi bi-send me-1"></i>Post Comment
                                 </button>
@@ -244,7 +260,67 @@
                                         <strong>{{ comment.author.username }}</strong>
                                         <small class="text-muted">{{ comment.created_at|ist_datetime('%b %d, %Y %H:%M') }} IST</small>
                                     </div>
-                                    <p class="mb-0">{{ comment.content }}</p>
+                                    {% if comment.content %}
+                                    <p class="mb-2">{{ comment.content }}</p>
+                                    {% endif %}
+                                    
+                                    <!-- Display Attachments -->
+                                    {% if comment.attachments.count() > 0 %}
+                                    <div class="comment-attachments mt-2">
+                                        <div class="row g-2">
+                                            {% for attachment in comment.attachments %}
+                                            <div class="col-auto">
+                                                <div class="attachment-item">
+                                                    {% if attachment.is_image() %}
+                                                    <!-- Image Preview -->
+                                                    <div class="attachment-preview position-relative">
+                                                        <a href="{{ url_for('tasks.view_attachment', attachment_id=attachment.id) }}" 
+                                                           target="_blank" class="d-block">
+                                                            <img src="{{ url_for('tasks.view_attachment', attachment_id=attachment.id) }}" 
+                                                                 alt="{{ attachment.filename }}" class="attachment-image rounded">
+                                                        </a>
+                                                        {% if current_user.is_admin() or current_user.is_manager() or attachment.uploaded_by == current_user.id or comment.user_id == current_user.id %}
+                                                        <form method="POST" action="{{ url_for('tasks.delete_attachment', attachment_id=attachment.id) }}" 
+                                                              class="attachment-delete-form">
+                                                            {{ comment_form.hidden_tag() }}
+                                                            <button type="submit" class="btn btn-danger btn-sm attachment-delete" 
+                                                                    onclick="return confirm('Delete this attachment?');">
+                                                                <i class="bi bi-x"></i>
+                                                            </button>
+                                                        </form>
+                                                        {% endif %}
+                                                    </div>
+                                                    <small class="text-muted d-block text-truncate" style="max-width: 120px;">
+                                                        {{ attachment.filename }}
+                                                    </small>
+                                                    {% else %}
+                                                    <!-- File Download -->
+                                                    <div class="attachment-file d-flex align-items-center gap-2 p-2 border rounded">
+                                                        <i class="bi bi-file-earmark{% if 'pdf' in attachment.file_type %}-pdf{% elif 'word' in attachment.file_type or 'doc' in attachment.filename %}-word{% elif 'excel' in attachment.file_type or 'xls' in attachment.filename %}-excel{% elif 'zip' in attachment.file_type or 'rar' in attachment.filename %}-zip{% else %}-text{% endif %} fs-4 text-primary"></i>
+                                                        <div class="flex-grow-1">
+                                                            <a href="{{ url_for('tasks.view_attachment', attachment_id=attachment.id) }}" 
+                                                               class="text-decoration-none d-block text-truncate" style="max-width: 150px;">
+                                                                {{ attachment.filename }}
+                                                            </a>
+                                                            <small class="text-muted">{{ attachment.formatted_size() }}</small>
+                                                        </div>
+                                                        {% if current_user.is_admin() or current_user.is_manager() or attachment.uploaded_by == current_user.id or comment.user_id == current_user.id %}
+                                                        <form method="POST" action="{{ url_for('tasks.delete_attachment', attachment_id=attachment.id) }}" class="ms-2">
+                                                            {{ comment_form.hidden_tag() }}
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                                    onclick="return confirm('Delete this attachment?');">
+                                                                <i class="bi bi-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -426,4 +502,107 @@
         </div>
     </div>
 </div>
+
+<!-- JavaScript for file upload preview -->
+<script>
+function updateFileList(input) {
+    const container = document.getElementById('selectedFiles');
+    container.innerHTML = '';
+    
+    if (input.files && input.files.length > 0) {
+        const fileList = document.createElement('div');
+        fileList.className = 'd-flex flex-wrap gap-2';
+        
+        for (let i = 0; i < input.files.length; i++) {
+            const file = input.files[i];
+            const fileSize = formatFileSize(file.size);
+            const isImage = file.type.startsWith('image/');
+            
+            const fileItem = document.createElement('div');
+            fileItem.className = 'selected-file-item d-flex align-items-center gap-2 p-2 border rounded bg-light';
+            
+            if (isImage) {
+                // Create image preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'selected-file-preview rounded';
+                    img.style.cssText = 'width: 40px; height: 40px; object-fit: cover;';
+                    fileItem.insertBefore(img, fileItem.firstChild);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                const icon = document.createElement('i');
+                icon.className = getFileIcon(file.name) + ' fs-5 text-primary';
+                fileItem.appendChild(icon);
+            }
+            
+            const fileInfo = document.createElement('div');
+            fileInfo.innerHTML = `
+                <div class="small text-truncate" style="max-width: 150px;">${escapeHtml(file.name)}</div>
+                <small class="text-muted">${fileSize}</small>
+            `;
+            fileItem.appendChild(fileInfo);
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-sm btn-outline-danger ms-auto';
+            removeBtn.innerHTML = '<i class="bi bi-x"></i>';
+            removeBtn.onclick = function() {
+                removeFile(input, i);
+            };
+            fileItem.appendChild(removeBtn);
+            
+            fileList.appendChild(fileItem);
+        }
+        
+        container.appendChild(fileList);
+    }
+}
+
+function removeFile(input, indexToRemove) {
+    const dt = new DataTransfer();
+    const files = input.files;
+    
+    for (let i = 0; i < files.length; i++) {
+        if (i !== indexToRemove) {
+            dt.items.add(files[i]);
+        }
+    }
+    
+    input.files = dt.files;
+    updateFileList(input);
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
+function getFileIcon(filename) {
+    const ext = filename.split('.').pop().toLowerCase();
+    const icons = {
+        'pdf': 'bi bi-file-earmark-pdf',
+        'doc': 'bi bi-file-earmark-word',
+        'docx': 'bi bi-file-earmark-word',
+        'xls': 'bi bi-file-earmark-excel',
+        'xlsx': 'bi bi-file-earmark-excel',
+        'txt': 'bi bi-file-earmark-text',
+        'csv': 'bi bi-file-earmark-spreadsheet',
+        'zip': 'bi bi-file-earmark-zip',
+        'rar': 'bi bi-file-earmark-zip'
+    };
+    return icons[ext] || 'bi bi-file-earmark';
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
 {% endblock %}

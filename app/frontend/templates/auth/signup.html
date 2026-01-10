@@ -1,82 +1,254 @@
 {% extends "base.html" %}
 
 {% block public_content %}
-<div class="container">
-    <div class="login-container mx-auto animate-fade-in">
-        <div class="login-card">
-            <!-- Logo -->
-            <div class="login-logo">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EcoG Products" class="img-fluid" style="max-height: 80px;">
-            </div>
-
-            <h2 class="text-center mb-2 fw-bold">Create Account</h2>
-            <p class="text-center text-muted mb-4">Join EcoGTasks today</p>
-
-            <!-- Registration Form -->
-            <form method="POST" action="{{ url_for('auth.signup') }}">
-                {{ form.hidden_tag() }}
-
-                <div class="mb-3">
-                    <label for="username" class="form-label">{{ form.username.label.text }}</label>
-                    {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""),
-                    placeholder="Choose a username") }}
-                    {% for error in form.username.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
+<div class="login-split-container">
+    <div class="row g-0">
+        <!-- Left Side - Company Info (70%) -->
+        <div class="col-lg-8 d-none d-lg-flex login-left-panel">
+            <div class="login-left-content">
+                <!-- Content -->
+                <div class="login-brand-content">
+                    <!-- Logo & Tagline Row -->
+                    <div class="d-flex align-items-center mb-3">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EcoG Products" class="img-fluid me-3" style="max-height: 50px; filter: brightness(0) invert(1);">
+                        <div>
+                            <h1 class="h3 fw-bold text-white mb-0">
+                                Join Our <span class="text-success">Eco-Friendly</span> Mission
+                            </h1>
+                        </div>
+                    </div>
+                    
+                    <p class="text-white-50 mb-3" style="font-size: 0.95rem;">
+                        Be part of the change! Help us manage sustainable production of Areca Leaf Plates and eco-friendly tableware.
+                    </p>
+                    
+                    <!-- Why Join Us - Compact -->
+                    <div class="mb-3">
+                        <h6 class="text-white mb-2"><i class="bi bi-stars text-success me-2"></i>Why Join EcoGTasks?</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <span class="text-white-50 small">Streamlined task management</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <span class="text-white-50 small">Real-time collaboration</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <span class="text-white-50 small">Track project progress</span>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success me-2"></i>
+                                    <span class="text-white-50 small">Role-based access</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Products Preview - Inline -->
+                    <div class="d-flex align-items-center flex-wrap gap-2 mb-3">
+                        <span class="text-white-50 small me-2"><i class="bi bi-box-seam me-1"></i>Products:</span>
+                        <span class="badge bg-success bg-opacity-25 text-success px-2 py-1">Areca Plates</span>
+                        <span class="badge bg-success bg-opacity-25 text-success px-2 py-1">Areca Bowls</span>
+                        <span class="badge bg-success bg-opacity-25 text-success px-2 py-1">Sugarcane Items</span>
+                        <a href="https://www.ecogproducts.com/" target="_blank" class="btn btn-outline-light btn-sm ms-auto py-1">
+                            <i class="bi bi-globe me-1"></i>Visit Website
+                        </a>
+                    </div>
+                    
+                    <!-- Footer - Inline -->
+                    <div class="d-flex align-items-center text-white-50 small border-top border-secondary pt-2" style="border-opacity: 0.3;">
+                        <span><i class="bi bi-geo-alt me-1"></i>Coimbatore, India</span>
+                        <span class="mx-3">|</span>
+                        <span><i class="bi bi-envelope me-1"></i>sales@ecogproducts.com</span>
+                    </div>
                 </div>
-
-                <div class="mb-3">
-                    <label for="email" class="form-label">{{ form.email.label.text }}</label>
-                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""),
-                    placeholder="Enter your email") }}
-                    {% for error in form.email.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="password" class="form-label">{{ form.password.label.text }}</label>
-                    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
-                    placeholder="Create a password (min 6 characters)") }}
-                    {% for error in form.password.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                </div>
-
-                <div class="mb-4">
-                    <label for="confirm_password" class="form-label">{{ form.confirm_password.label.text }}</label>
-                    {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""),
-                    placeholder="Confirm your password") }}
-                    {% for error in form.confirm_password.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                </div>
-
-                <button type="submit" class="btn btn-primary w-100 py-2">
-                    <i class="bi bi-person-check me-2"></i> Create Account
-                </button>
-            </form>
-
-            <hr class="my-4">
-
-            <div class="text-center">
-                <p class="mb-2">Already have an account?</p>
-                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
-                </a>
-            </div>
-
-            <div class="text-center mt-4">
-                <small class="text-muted">
-                    <i class="bi bi-shield-lock me-1"></i>
-                    Your data is securely encrypted
-                </small>
             </div>
         </div>
-
-        <p class="text-center text-muted mt-4">
-            <small>&copy; {{ now().year if now else '2024' }} EcoG Products. All rights reserved.</small>
-        </p>
+        
+        <!-- Right Side - Signup Form (30%) -->
+        <div class="col-lg-4 d-flex align-items-center justify-content-center login-right-panel">
+            <div class="login-form-container animate-fade-in">
+                <!-- Mobile Logo (visible only on small screens) -->
+                <div class="d-lg-none text-center mb-2">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EcoG Products" class="img-fluid" style="max-height: 45px;">
+                </div>
+                
+                <!-- Welcome Text -->
+                <div class="text-center mb-2">
+                    <h2 class="fw-bold mb-1" style="font-size: 1.3rem;">Create Account</h2>
+                    <p class="text-muted small mb-0">Join EcoGTasks today</p>
+                </div>
+                
+                <!-- Registration Form -->
+                <form method="POST" action="{{ url_for('auth.signup') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-2">
+                        <label for="username" class="form-label small mb-1">
+                            <i class="bi bi-person me-1"></i> {{ form.username.label.text }}
+                        </label>
+                        {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else ""),
+                        placeholder="Choose a username") }}
+                        {% for error in form.username.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label for="email" class="form-label small mb-1">
+                            <i class="bi bi-envelope me-1"></i> {{ form.email.label.text }}
+                        </label>
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""),
+                        placeholder="Enter your email") }}
+                        {% for error in form.email.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <label for="password" class="form-label small mb-1">
+                                <i class="bi bi-lock me-1"></i> Password
+                            </label>
+                            {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+                            placeholder="Min 6 chars") }}
+                            {% for error in form.password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-6">
+                            <label for="confirm_password" class="form-label small mb-1">
+                                <i class="bi bi-lock-fill me-1"></i> Confirm
+                            </label>
+                            {{ form.confirm_password(class="form-control" + (" is-invalid" if form.confirm_password.errors else ""),
+                            placeholder="Confirm") }}
+                            {% for error in form.confirm_password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-person-check me-2"></i> Create Account
+                    </button>
+                    
+                    <div class="alert alert-info small py-1 px-2 mb-2" role="alert" style="font-size: 0.75rem;">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Account requires admin approval
+                    </div>
+                </form>
+                
+                <div class="text-center">
+                    <span class="text-muted small">Already have an account?</span>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-link btn-sm text-primary p-0 ms-1">
+                        Sign In <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+/* Split Login Page Styles */
+html, body {
+    overflow: hidden !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+}
+
+.login-split-container {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    background-color: var(--bg-dark);
+}
+
+.login-left-panel {
+    position: relative;
+    background: linear-gradient(135deg, #0d3320 0%, #1a5c3a 50%, #0f4229 100%);
+    overflow: hidden;
+    height: 100vh;
+}
+
+.login-left-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.15;
+}
+
+.login-left-content {
+    position: relative;
+    z-index: 1;
+    padding: 2rem 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100vh;
+}
+
+.login-brand-content {
+    max-width: 700px;
+}
+
+.login-right-panel {
+    background-color: var(--bg-dark);
+    padding: 1.5rem;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-form-container {
+    width: 100%;
+    max-width: 320px;
+}
+
+.login-form-container .form-control {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.85rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+        max-height: none !important;
+    }
+    
+    .login-split-container {
+        height: auto;
+        max-height: none;
+        overflow: visible;
+    }
+    
+    .login-right-panel {
+        min-height: 100vh;
+        height: auto;
+    }
+    
+    .login-form-container {
+        padding: 1.5rem;
+        max-width: 400px;
+    }
+}
+</style>
 {% endblock %}

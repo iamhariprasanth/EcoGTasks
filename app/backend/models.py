@@ -340,3 +340,50 @@ class TaskHistory(db.Model):
     
     def __repr__(self):
         return f'<TaskHistory {self.action} on Task {self.task_id}>'
+
+
+class CommentAttachment(db.Model):
+    """
+    Attachment model for comment files/images.
+    
+    Attributes:
+        id: Primary key
+        comment_id: Parent comment
+        filename: Original filename
+        stored_filename: Unique stored filename
+        file_type: MIME type of the file
+        file_size: File size in bytes
+        uploaded_by: User who uploaded the file
+        created_at: Upload timestamp
+    """
+    __tablename__ = 'comment_attachments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    comment_id = db.Column(db.Integer, db.ForeignKey('comments.id'), nullable=False, index=True)
+    filename = db.Column(db.String(255), nullable=False)
+    stored_filename = db.Column(db.String(255), nullable=False, unique=True)
+    file_type = db.Column(db.String(100))
+    file_size = db.Column(db.Integer)  # Size in bytes
+    uploaded_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=get_ist_now)
+    
+    # Relationships
+    comment = db.relationship('Comment', backref=db.backref('attachments', lazy='dynamic', cascade='all, delete-orphan'))
+    uploader = db.relationship('User', backref='uploaded_attachments')
+    
+    def is_image(self):
+        """Check if attachment is an image."""
+        return self.file_type and self.file_type.startswith('image/')
+    
+    def formatted_size(self):
+        """Return human-readable file size."""
+        if not self.file_size:
+            return 'Unknown'
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if self.file_size < 1024:
+                return f'{self.file_size:.1f} {unit}'
+            self.file_size /= 1024
+        return f'{self.file_size:.1f} TB'
+    
+    def __repr__(self):
+        return f'<CommentAttachment {self.filename} on Comment {self.comment_id}>'

@@ -160,11 +160,12 @@ class TaskForm(FlaskForm):
 
 
 class CommentForm(FlaskForm):
-    """Task comment form."""
+    """Task comment form with optional file attachments."""
     content = TextAreaField('Comment', validators=[
-        DataRequired(message='Comment cannot be empty'),
+        Optional(),  # Made optional since attachments can be added without text
         Length(max=2000, message='Comment must be less than 2000 characters')
     ])
+    # Note: File uploads are handled via request.files, not WTForms
     submit = SubmitField('Add Comment')
 
 

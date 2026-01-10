@@ -1,72 +1,343 @@
 {% extends "base.html" %}
 
 {% block public_content %}
-<div class="container">
-    <div class="login-container mx-auto animate-fade-in">
-        <div class="login-card">
-            <!-- Logo -->
-            <div class="login-logo">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EcoG Products" class="img-fluid" style="max-height: 80px;">
-            </div>
-
-            <h2 class="text-center mb-2 fw-bold">Welcome Back</h2>
-            <p class="text-center text-muted mb-4">Sign in to your account</p>
-
-            <!-- Login Form -->
-            <form method="POST" action="{{ url_for('auth.login') }}">
-                {{ form.hidden_tag() }}
-
-                <div class="mb-3">
-                    <label for="email" class="form-label">{{ form.email.label.text }}</label>
-                    {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""),
-                    placeholder="Enter your email") }}
-                    {% for error in form.email.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                </div>
-
-                <div class="mb-3">
-                    <label for="password" class="form-label">{{ form.password.label.text }}</label>
-                    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
-                    placeholder="Enter your password") }}
-                    {% for error in form.password.errors %}
-                    <div class="invalid-feedback">{{ error }}</div>
-                    {% endfor %}
-                </div>
-
-                <div class="mb-3 d-flex justify-content-between align-items-center">
-                    <div class="form-check">
-                        {{ form.remember_me(class="form-check-input") }}
-                        <label class="form-check-label" for="remember_me">Remember me</label>
+<div class="login-split-container">
+    <div class="row g-0">
+        <!-- Left Side - Company Info (70%) -->
+        <div class="col-lg-8 d-none d-lg-flex login-left-panel">
+            <div class="login-left-content">
+                <!-- Content -->
+                <div class="login-brand-content">
+                    <!-- Logo & Tagline Row -->
+                    <div class="d-flex align-items-center mb-2">
+                        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EcoG Products" class="img-fluid me-3" style="max-height: 45px; filter: brightness(0) invert(1);">
+                        <div>
+                            <h1 class="h4 fw-bold text-white mb-0">
+                                Beauty in all shapes, sizes & <span class="text-success">colours</span>
+                            </h1>
+                            <small class="text-white-50">Since February 5, 2020 • ISO Certified</small>
+                        </div>
                     </div>
-                    <a href="{{ url_for('auth.forgot_password') }}" class="text-decoration-none small">Forgot Password?</a>
+                    
+                    <!-- Who We Are - Brief -->
+                    <p class="text-white-50 mb-3" style="font-size: 0.9rem; line-height: 1.5;">
+                        A beacon of sustainability offering eco-friendly alternatives to plastic disposables. We manufacture premium plates, trays & dishes from areca palm leaves using 100% natural, chemical-free process.
+                    </p>
+                    
+                    <!-- Features Row -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-3">
+                            <div class="feature-item text-center py-1">
+                                <i class="bi bi-tree-fill text-success"></i>
+                                <div class="text-white" style="font-size: 0.7rem;">100% Natural</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="feature-item text-center py-1">
+                                <i class="bi bi-recycle text-success"></i>
+                                <div class="text-white" style="font-size: 0.7rem;">Biodegradable</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="feature-item text-center py-1">
+                                <i class="bi bi-globe-americas text-success"></i>
+                                <div class="text-white" style="font-size: 0.7rem;">Global Export</div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <div class="feature-item text-center py-1">
+                                <i class="bi bi-lightning-fill text-success"></i>
+                                <div class="text-white" style="font-size: 0.7rem;">3hr Delivery</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Mission & Vision - Compact -->
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <div class="mission-box p-2 rounded" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="bi bi-bullseye text-success me-1"></i>
+                                    <span class="text-success fw-semibold" style="font-size: 0.75rem;">Our Mission</span>
+                                </div>
+                                <p class="text-white-50 mb-0" style="font-size: 0.7rem; line-height: 1.3;">Lead in eco-friendly packaging solutions fostering environmental conservation.</p>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="mission-box p-2 rounded" style="background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.2);">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="bi bi-eye text-success me-1"></i>
+                                    <span class="text-success fw-semibold" style="font-size: 0.75rem;">Our Vision</span>
+                                </div>
+                                <p class="text-white-50 mb-0" style="font-size: 0.7rem; line-height: 1.3;">Create a world where sustainability is the norm for businesses.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Footer - Compact -->
+                    <div class="d-flex align-items-center justify-content-between text-white-50 border-top border-secondary pt-2" style="font-size: 0.75rem;">
+                        <div>
+                            <i class="bi bi-geo-alt me-1"></i>Coimbatore, TN
+                            <span class="mx-2">•</span>
+                            <i class="bi bi-telephone me-1"></i>8778040400
+                        </div>
+                        <a href="https://www.ecogproducts.com/" target="_blank" class="btn btn-success btn-sm py-0 px-2" style="font-size: 0.7rem;">
+                            <i class="bi bi-globe me-1"></i>Shop Now
+                        </a>
+                    </div>
                 </div>
-
-                <button type="submit" class="btn btn-primary w-100 py-2">
-                    <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
-                </button>
-            </form>
-
-            <hr class="my-4">
-
-            <div class="text-center">
-                <p class="mb-2">Don't have an account?</p>
-                <a href="{{ url_for('auth.signup') }}" class="btn btn-outline-primary w-100">
-                    <i class="bi bi-person-plus me-2"></i> Create Account
-                </a>
-            </div>
-
-            <div class="text-center mt-4">
-                <small class="text-muted">
-                    <i class="bi bi-shield-lock me-1"></i>
-                    Protected by encrypted session
-                </small>
             </div>
         </div>
-
-        <p class="text-center text-muted mt-4">
-            <small>&copy; {{ now().year if now else '2024' }} EcoG Products. All rights reserved.</small>
-        </p>
+        
+        <!-- Right Side - Login Form (30%) -->
+        <div class="col-lg-4 d-flex align-items-center justify-content-center login-right-panel">
+            <div class="login-form-container animate-fade-in">
+                <!-- Mobile Logo (visible only on small screens) -->
+                <div class="d-lg-none text-center mb-3">
+                    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="EcoG Products" class="img-fluid" style="max-height: 50px;">
+                </div>
+                
+                <!-- Welcome Text -->
+                <div class="text-center mb-3">
+                    <h2 class="fw-bold mb-1">Welcome Back!</h2>
+                    <p class="text-muted small mb-0">Sign in to manage your tasks</p>
+                </div>
+                
+                <!-- Login Form -->
+                <form method="POST" action="{{ url_for('auth.login') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="mb-2">
+                        <label for="email" class="form-label small mb-1">
+                            <i class="bi bi-envelope me-1"></i> {{ form.email.label.text }}
+                        </label>
+                        {{ form.email(class="form-control" + (" is-invalid" if form.email.errors else ""),
+                        placeholder="Enter your email") }}
+                        {% for error in form.email.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-2">
+                        <label for="password" class="form-label small mb-1">
+                            <i class="bi bi-lock me-1"></i> {{ form.password.label.text }}
+                        </label>
+                        {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""),
+                        placeholder="Enter your password") }}
+                        {% for error in form.password.errors %}
+                        <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3 d-flex justify-content-between align-items-center">
+                        <div class="form-check">
+                            {{ form.remember_me(class="form-check-input") }}
+                            <label class="form-check-label small" for="remember_me">Remember me</label>
+                        </div>
+                        <a href="{{ url_for('auth.forgot_password') }}" class="text-decoration-none small text-primary">
+                            Forgot Password?
+                        </a>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+                    </button>
+                </form>
+                
+                <div class="divider-with-text my-2">
+                    <span>or</span>
+                </div>
+                
+                <div class="text-center">
+                    <span class="text-muted small">Don't have an account?</span>
+                    <a href="{{ url_for('auth.signup') }}" class="btn btn-link btn-sm text-primary p-0 ms-1">
+                        Create Account <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<style>
+/* Split Login Page Styles - No Scroll */
+html, body {
+    overflow: hidden !important;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+}
+
+.login-split-container {
+    height: 100vh;
+    overflow: hidden !important;
+    background-color: var(--bg-dark);
+}
+
+.login-split-container > .row {
+    height: 100vh;
+}
+
+.login-left-panel {
+    position: relative;
+    background: linear-gradient(135deg, #0d3320 0%, #1a5c3a 50%, #0f4229 100%);
+    height: 100vh;
+    overflow: hidden !important;
+}
+
+.login-left-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.15;
+}
+
+.login-left-content {
+    position: relative;
+    z-index: 1;
+    padding: 2rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+}
+
+.login-brand-content {
+    max-width: 100%;
+}
+
+.feature-item {
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.product-img-box {
+    position: relative;
+    border-radius: 8px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+    height: 80px;
+}
+
+.product-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.product-img-box:hover img {
+    transform: scale(1.05);
+}
+
+.product-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+    font-size: 0.65rem;
+    padding: 0.5rem 0.25rem 0.25rem;
+    text-align: center;
+    font-weight: 500;
+}
+
+.login-right-panel {
+    background-color: #016064;
+    height: 100vh;
+    overflow: hidden !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-form-container {
+    width: 100%;
+    max-width: 320px;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.login-form-container h2,
+.login-form-container p,
+.login-form-container label,
+.login-form-container .form-check-label {
+    color: #1a1a2e !important;
+}
+
+.login-form-container .text-muted {
+    color: #555 !important;
+}
+
+.login-form-container .text-primary {
+    color: #016064 !important;
+}
+
+.login-form-container .btn-primary {
+    background-color: #016064;
+    border-color: #016064;
+}
+
+.login-form-container .btn-primary:hover {
+    background-color: #014d50;
+    border-color: #014d50;
+}
+
+.divider-with-text {
+    display: flex;
+    align-items: center;
+}
+
+.divider-with-text::before,
+.divider-with-text::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+}
+
+.divider-with-text span {
+    padding: 0 0.75rem;
+    color: #666;
+    font-size: 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 991.98px) {
+    html, body {
+        overflow: auto !important;
+        height: auto;
+    }
+    
+    .login-split-container {
+        height: auto;
+        overflow: visible !important;
+    }
+    
+    .login-split-container > .row {
+        height: auto;
+    }
+    
+    .login-right-panel {
+        min-height: 100vh;
+        height: auto;
+        overflow: visible !important;
+    }
+    
+    .login-form-container {
+        padding: 1.5rem;
+        max-width: 380px;
+    }
+}
+</style>
 {% endblock %}

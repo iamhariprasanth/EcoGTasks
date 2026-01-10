@@ -264,7 +264,7 @@
                             <div class="card bg-dark border-secondary h-100">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="mb-0 text-truncate" style="max-width: 180px;" title="{{ project.name }}">
+                                        <h6 class="mb-0 text-truncate text-white" style="max-width: 180px;" title="{{ project.name }}">
                                             {{ project.name }}
                                         </h6>
                                         <span class="badge {% if project.completion >= 75 %}bg-success{% elif project.completion >= 50 %}bg-info{% elif project.completion >= 25 %}bg-warning{% else %}bg-secondary{% endif %}">
@@ -275,10 +275,10 @@
                                         <div class="progress-bar {% if project.completion >= 75 %}bg-success{% elif project.completion >= 50 %}bg-info{% elif project.completion >= 25 %}bg-warning{% else %}bg-secondary{% endif %}" 
                                              style="width: {{ project.completion }}%"></div>
                                     </div>
-                                    <div class="d-flex justify-content-between small text-muted">
+                                    <div class="d-flex justify-content-between small text-white-50">
                                         <span><i class="bi bi-check-circle text-success me-1"></i>{{ project.done }} done</span>
-                                        <span><i class="bi bi-arrow-repeat text-primary me-1"></i>{{ project.in_progress }} active</span>
-                                        <span><i class="bi bi-circle text-secondary me-1"></i>{{ project.todo }} todo</span>
+                                        <span><i class="bi bi-arrow-repeat text-info me-1"></i>{{ project.in_progress }} active</span>
+                                        <span><i class="bi bi-circle text-white-50 me-1"></i>{{ project.todo }} todo</span>
                                     </div>
                                 </div>
                             </div>

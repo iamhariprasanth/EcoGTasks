@@ -2,17 +2,34 @@
 Task Routes
 Complete CRUD operations for tasks with comments and history.
 """
+import os
+import uuid
 from datetime import datetime, date
-from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, Response
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, Response, current_app, send_from_directory
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 
 from app import db
-from app.backend.models import Task, Project, User, Comment, TaskHistory, TaskStatus, TaskPriority, TimeLog
+from app.backend.models import Task, Project, User, Comment, TaskHistory, TaskStatus, TaskPriority, TimeLog, CommentAttachment
 from app.backend.utils.forms import TaskForm, CommentForm, TaskFilterForm, ReassignTaskForm, TimeLogForm, UpdateProgressForm
 from app.backend.utils.decorators import task_access_required, project_access_required
 from app.backend.utils.email import send_task_created_email, send_task_assigned_email
 
 tasks_bp = Blueprint('tasks', __name__, url_prefix='/tasks')
+
+
+def allowed_file(filename):
+    """Check if file extension is allowed."""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in current_app.config.get('ALLOWED_EXTENSIONS', set())
+
+
+def get_upload_folder():
+    """Get upload folder path, creating it if necessary."""
+    upload_folder = current_app.config.get('UPLOAD_FOLDER')
+    if not os.path.exists(upload_folder):
+        os.makedirs(upload_folder)
+    return upload_folder
 
 
 def log_task_history(task, user, action, field_name=None, old_value=None, new_value=None):
@@ -294,28 +311,135 @@ def delete_task(task_id):
 @task_access_required
 def add_comment(task_id):
     """
-    Add a comment to a task.
+    Add a comment to a task with optional file attachments.
     """
     task = Task.query.get_or_404(task_id)
     form = CommentForm()
     
-    if form.validate_on_submit():
-        comment = Comment(
-            task_id=task_id,
-            user_id=current_user.id,
-            content=form.content.data
-        )
-        db.session.add(comment)
-        
-        # Log comment addition
-        log_task_history(task, current_user, 'commented')
-        
-        db.session.commit()
-        flash('Comment added successfully!', 'success')
+    # Get files from request
+    files = request.files.getlist('attachments')
+    has_valid_files = any(f and f.filename for f in files)
+    
+    # Validate: either content or files must be present
+    if not form.content.data and not has_valid_files:
+        flash('Comment cannot be empty. Add text or attach files.', 'danger')
+        return redirect(url_for('tasks.view_task', task_id=task_id))
+    
+    # Create comment
+    comment = Comment(
+        task_id=task_id,
+        user_id=current_user.id,
+        content=form.content.data or ''
+    )
+    db.session.add(comment)
+    db.session.flush()  # Get comment ID
+    
+    # Handle file uploads
+    uploaded_files = []
+    for file in files:
+        if file and file.filename:
+            if allowed_file(file.filename):
+                # Generate unique filename
+                original_filename = secure_filename(file.filename)
+                ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else ''
+                stored_filename = f"{uuid.uuid4().hex}_{comment.id}.{ext}" if ext else f"{uuid.uuid4().hex}_{comment.id}"
+                
+                # Save file
+                upload_folder = get_upload_folder()
+                file_path = os.path.join(upload_folder, stored_filename)
+                file.save(file_path)
+                
+                # Get file size and type
+                file_size = os.path.getsize(file_path)
+                file_type = file.content_type or 'application/octet-stream'
+                
+                # Create attachment record
+                attachment = CommentAttachment(
+                    comment_id=comment.id,
+                    filename=original_filename,
+                    stored_filename=stored_filename,
+                    file_type=file_type,
+                    file_size=file_size,
+                    uploaded_by=current_user.id
+                )
+                db.session.add(attachment)
+                uploaded_files.append(original_filename)
+            else:
+                flash(f'File type not allowed: {file.filename}', 'warning')
+    
+    # Log comment addition
+    log_task_history(task, current_user, 'commented')
+    
+    db.session.commit()
+    
+    if uploaded_files:
+        flash(f'Comment added with {len(uploaded_files)} attachment(s).', 'success')
     else:
-        flash('Comment cannot be empty.', 'danger')
+        flash('Comment added successfully!', 'success')
     
     return redirect(url_for('tasks.view_task', task_id=task_id))
+
+
+@tasks_bp.route('/attachment/<int:attachment_id>')
+@login_required
+def view_attachment(attachment_id):
+    """
+    View/download an attachment.
+    """
+    attachment = CommentAttachment.query.get_or_404(attachment_id)
+    comment = attachment.comment
+    task = comment.task
+    
+    # Check task access
+    if not current_user.is_admin():
+        project = task.project
+        if not current_user.can_access_project(project):
+            abort(403)
+    
+    upload_folder = get_upload_folder()
+    return send_from_directory(upload_folder, attachment.stored_filename, 
+                               download_name=attachment.filename,
+                               as_attachment=not attachment.is_image())
+
+
+@tasks_bp.route('/attachment/<int:attachment_id>/delete', methods=['POST'])
+@login_required
+def delete_attachment(attachment_id):
+    """
+    Delete an attachment. Only uploader, admin, or manager can delete.
+    """
+    attachment = CommentAttachment.query.get_or_404(attachment_id)
+    comment = attachment.comment
+    task = comment.task
+    
+    # Check permissions - only uploader, admin, manager, or comment author can delete
+    can_delete = (
+        current_user.is_admin() or 
+        current_user.is_manager() or 
+        attachment.uploaded_by == current_user.id or
+        comment.user_id == current_user.id
+    )
+    
+    if not can_delete:
+        flash('You do not have permission to delete this attachment.', 'danger')
+        return redirect(url_for('tasks.view_task', task_id=task.id))
+    
+    # Delete file from disk
+    try:
+        upload_folder = get_upload_folder()
+        file_path = os.path.join(upload_folder, attachment.stored_filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    except Exception as e:
+        current_app.logger.error(f"Error deleting file: {e}")
+    
+    # Delete from database
+    filename = attachment.filename
+    db.session.delete(attachment)
+    db.session.commit()
+    
+    flash(f'Attachment "{filename}" deleted successfully.', 'success')
+    return redirect(url_for('tasks.view_task', task_id=task.id))
 
 
 @tasks_bp.route('/<int:task_id>/reassign', methods=['POST'])

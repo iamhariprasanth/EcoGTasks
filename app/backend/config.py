@@ -42,6 +42,11 @@ class Config:
     SQLALCHEMY_DATABASE_URI = get_database_uri()
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
+    # File Upload configuration
+    UPLOAD_FOLDER = os.path.join(basedir, 'uploads', 'attachments')
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max file size
+    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv', 'zip', 'rar'}
+    
     # Session configuration for security
     SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
     SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
